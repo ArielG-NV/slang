@@ -1100,8 +1100,6 @@ namespace Slang
         case ASTNodeType::RayPayloadWriteSemantic:
             return (as<VarDeclBase>(decl) && isGlobalDecl(decl)) || as<ParamDecl>(decl) || as<GLSLInterfaceBlockDecl>(decl);
 
-
-        //buffer block, members in block, globals, param,
         case ASTNodeType::GLSLWriteOnlyModifier:
         case ASTNodeType::GLSLReadOnlyModifier:
         case ASTNodeType::GLSLVolatileModifier:
@@ -1109,8 +1107,8 @@ namespace Slang
         case ASTNodeType::GloballyCoherentModifier:
         {
             auto param = as<ParamDecl>(decl);
-            return as<VarDecl>(decl) && (isGlobalDecl(decl) || as<StructDecl>(getParentDecl(decl)) || param || as<GLSLInterfaceBlockDecl>(decl))
-                || (param && isGLSLInput)
+            return as<VarDecl>(decl) && (isGlobalDecl(decl) || as<StructDecl>(getParentDecl(decl)) 
+                || param || as<GLSLInterfaceBlockDecl>(decl)) || (param && isGLSLInput)
                 ;
         }
 

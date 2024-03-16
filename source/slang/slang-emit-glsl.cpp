@@ -184,7 +184,6 @@ void GLSLSourceEmitter::_emitGLSLStructuredBuffer(IRGlobalParam* varDecl, IRHLSL
     HLSLConsumeStructuredBufferType                 - TODO (JS): Its possible that this can be readonly, but we currently don't support on GLSL
     */
     _emitMemoryQualifierDecorations(varDecl);
-
     if (as<IRHLSLStructuredBufferType>(structuredBufferType))
     {
         m_writer->emit("readonly ");
@@ -799,9 +798,8 @@ void GLSLSourceEmitter::_emitGLSLTextureOrTextureSamplerType(IRTextureTypeBase* 
 
     if(type->isRect())
     {
-        // Ever since 2023, imageRect is only valid for OpenGL targets; 
-        // otherwise we treat it as a Rect
-        // https://github.com/KhronosGroup/GLSL/pull/224
+        // imageRect is only valid for OpenGL targets; 
+        // otherwise we treat it as a 2D image
         if(isOpenGLTarget(this->getTargetReq()))
             m_writer->emit("Rect");
     }

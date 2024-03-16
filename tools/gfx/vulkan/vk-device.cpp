@@ -1650,19 +1650,13 @@ Result DeviceImpl::createTextureResource(
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-
-
-        // early return if ms-texture
         if(desc.sampleDesc.numSamples != 1)
         {
-            // For simplicity sake, handle senario where buffer is 1 color
-            // else we would need to make a compute shader and dispatch 
-            // with logic to handle per array element of a MS array
-            // the conversion code is not correct for larger types, but 
-            // this is also fine for testing purposes
+            // Handle senario where texture is sampled; we cannot use 
+            // a simple vulkan copy in this senario. ClearColorImage 
+            // is not data accurate but it is fine for testing 
             FormatInfo formatInfo;
             gfxGetFormatInfo(desc.format, &formatInfo);
-
             uint32_t data = 0;
             VkClearColorValue clearColor;
             switch(formatInfo.channelType)
@@ -1730,7 +1724,6 @@ Result DeviceImpl::createTextureResource(
             uint32_t data_arr[4] = {data, data, data, data};
             memcpy(clearColor.uint32, data_arr, sizeof(VkClearColorValue));
 
-
             VkImageSubresourceRange range{};
             range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             range.baseMipLevel = 0;
@@ -1744,8 +1737,7 @@ Result DeviceImpl::createTextureResource(
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 &clearColor,
                 1,
-                &range
-                );
+                &range);
         }
         else
         {

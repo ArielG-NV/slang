@@ -428,7 +428,7 @@ namespace Slang
                     // One exception to this is if we're reading the contents
                     // of a GLSL buffer interface block which isn't marked as
                     // read_only
-                    //note: mutable only if child is not read-only and you are not read-only as well
+                    // mutable only if child is not read-only and baseExpr is not read-only
                     expr->type.isLeftValue = isMutableGLSLBufferBlockVarExpr(baseExpr) && (expr->type.hasReadOnlyOnTarget == false);
                 }
                 else
@@ -2078,15 +2078,6 @@ namespace Slang
                 getSink()->diagnoseWithoutSourceView(thisExpr, Diagnostics::thisIsImmutableByDefault);
             }
         }
-    }
-
-    bool SemanticsVisitor::isWriteOnlyExpr(Expr* expr)
-    {
-        if (auto declRef = as<DeclRefType>(expr->type.type))
-        {
-            return declRef->getDeclRefBase()->getDecl()->hasModifier<GLSLWriteOnlyModifier>();
-        }
-        return false;
     }
 
     Expr* SemanticsVisitor::checkAssignWithCheckedOperands(AssignExpr* expr)
@@ -4249,10 +4240,8 @@ namespace Slang
     Expr* SemanticsExprVisitor::visitFuncTypeExpr(FuncTypeExpr* expr)
     {
         // The input and output to a function type must both be types
-        for (auto& t : expr->parameters)
-        {
+        for(auto& t : expr->parameters)
             t = CheckProperType(t);
-        }
         expr->result = CheckProperType(expr->result);
 
         // TODO: Kind checking? Where are we stopping someone passing

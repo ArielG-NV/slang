@@ -1865,6 +1865,7 @@ namespace Slang
                 // it to the type of the variable.
                 //
             initExpr = subVisitor.CheckTerm(initExpr);
+
             if (initExpr->type.isWriteOnly)
                 getSink()->diagnose(initExpr, Diagnostics::readingFromWriteOnly);
             initExpr = coerce(CoercionSite::Initializer, varDecl->type.Ptr(), initExpr);
