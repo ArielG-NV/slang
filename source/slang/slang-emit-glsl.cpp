@@ -116,25 +116,26 @@ void GLSLSourceEmitter::_requireGLSLVersion(int version)
 
 void GLSLSourceEmitter::_emitMemoryQualifierDecorations(IRInst* varDecl)
 {
-    for (auto decoration : varDecl->getDecorations())
+    if(auto collection = varDecl->findDecoration<IRMemoryQualifierCollectionDecoration>())
     {
-        if (as<IRGloballyCoherentDecoration>(decoration))
+        IRIntegerValue flags = collection->getMemoryQualifierBit();
+        if (flags | MemoryQualifierCollectionModifier::Flags::kCoherent)
         {
             m_writer->emit("coherent ");
         }
-        else if (as<IRGLSLVolatileDecoration>(decoration))
+        if (flags | MemoryQualifierCollectionModifier::Flags::kVolatile)
         {
             m_writer->emit("volatile ");
         }
-        else if (as<IRGLSLRestrictDecoration>(decoration))
+        if (flags | MemoryQualifierCollectionModifier::Flags::kRestrict)
         {
             m_writer->emit("restrict ");
         }
-        else if (as<IRGLSLReadOnlyDecoration>(decoration))
+        if (flags | MemoryQualifierCollectionModifier::Flags::kReadOnly)
         {
             m_writer->emit("readonly ");
         }
-        else if (as<IRGLSLWriteOnlyDecoration>(decoration))
+        if (flags | MemoryQualifierCollectionModifier::Flags::kWriteOnly)
         {
             m_writer->emit("writeonly ");
         }
@@ -2724,9 +2725,10 @@ void GLSLSourceEmitter::emitVarDecorationsImpl(IRInst* varDecl)
         break;
     }
 
-    if (varDecl->findDecoration<IRGloballyCoherentDecoration>())
+    if (auto collection = varDecl->findDecoration<IRMemoryQualifierCollectionDecoration>())
     {
-        m_writer->emit("coherent\n");
+        if(collection->getMemoryQualifierBit() | MemoryQualifierCollectionModifier::Flags::kCoherent)
+           m_writer->emit("coherent\n");
     }
 }
 

@@ -946,21 +946,15 @@ namespace Slang
 
             // Ensures child of struct is set read-only or not
             bool isWriteOnly = false;
+            if(auto collection = varDeclRef.getDecl()->findModifier<MemoryQualifierCollectionModifier>())
             {
-                for (auto mod : varDeclRef.getDecl()->modifiers)
+                if(collection->getMemoryQualifierBit() & MemoryQualifierCollectionModifier::Flags::kReadOnly)
                 {
-                    if (as<GLSLReadOnlyModifier>(mod))
-                    {
-                        isLValue = false;
-                        qualType.hasReadOnlyOnTarget = true;
-                        if (isLValue == false && isWriteOnly) break;
-                    }
-                    if (as<GLSLWriteOnlyModifier>(mod))
-                    {
-                        isWriteOnly = true;
-                        if (isLValue == false && isWriteOnly) break;
-                    }
+                    isLValue = false;
+                    qualType.hasReadOnlyOnTarget = true;
                 }
+                if(collection->getMemoryQualifierBit() & MemoryQualifierCollectionModifier::Flags::kWriteOnly)
+                    isWriteOnly = true;
             }
 
             qualType.isLeftValue = isLValue;
