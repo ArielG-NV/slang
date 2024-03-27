@@ -1008,6 +1008,7 @@ namespace Slang
         case ASTNodeType::GLSLLayoutModifierGroupBegin:
         case ASTNodeType::GLSLLayoutModifierGroupEnd:
         case ASTNodeType::GLSLBufferModifier:
+        case ASTNodeType::MemoryQualifierCollectionModifier:
         case ASTNodeType::GLSLWriteOnlyModifier:
         case ASTNodeType::GLSLReadOnlyModifier:
         case ASTNodeType::GLSLVolatileModifier:
@@ -1253,13 +1254,10 @@ namespace Slang
                 memoryQualifierBit);
             if (newModifier)
             {
-                // insert in modifiers list the memoryQualifierCollection
-                Modifier* mod = m->next;
                 m->next = memoryQualifiers;
-                memoryQualifiers->next = mod;
-                return m;
+                return memoryQualifiers;
             }
-            return m;
+            return nullptr;
         }
 
         if (auto hlslSemantic = as<HLSLSimpleSemantic>(m))

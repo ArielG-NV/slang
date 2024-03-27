@@ -349,15 +349,17 @@ struct IRRequireGLSLExtensionDecoration : IRDecoration
     }
 };
 
+struct IRMemoryQualifierCollectionDecoration : IRDecoration
+{
+    enum { kOp = kIROp_MemoryQualifierCollectionDecoration };
+    IR_LEAF_ISA(MemoryQualifierCollectionDecoration)
+    IRIntegerValue getMemoryQualifierBit() { return cast<IRIntLit>(getOperand(0))->getValue(); }
+};
+
 IR_SIMPLE_DECORATION(HasExplicitHLSLBindingDecoration)
 IR_SIMPLE_DECORATION(ReadNoneDecoration)
 IR_SIMPLE_DECORATION(NoSideEffectDecoration)
 IR_SIMPLE_DECORATION(EarlyDepthStencilDecoration)
-IR_SIMPLE_DECORATION(GloballyCoherentDecoration)
-IR_SIMPLE_DECORATION(GLSLVolatileDecoration)
-IR_SIMPLE_DECORATION(GLSLRestrictDecoration)
-IR_SIMPLE_DECORATION(GLSLReadOnlyDecoration)
-IR_SIMPLE_DECORATION(GLSLWriteOnlyDecoration)
 IR_SIMPLE_DECORATION(PreciseDecoration)
 IR_SIMPLE_DECORATION(PublicDecoration)
 IR_SIMPLE_DECORATION(HLSLExportDecoration)
@@ -4787,6 +4789,11 @@ public:
     void addKnownBuiltinDecoration(IRInst* value, UnownedStringSlice const& name)
     {
         addDecoration(value, kIROp_KnownBuiltinDecoration, getStringValue(name));
+    }
+
+    void addMemoryQualifierCollectionDecoration(IRInst* inst, IRIntegerValue flags)
+    {
+        addDecoration(inst, kIROp_MemoryQualifierCollectionDecoration, getIntValue(getIntType(), flags));
     }
 };
 

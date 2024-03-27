@@ -314,7 +314,8 @@ namespace Slang
 
         // Check the modifiers on the declaration
         const auto d = varExpr->declRef.getDecl();
-        if(d->hasModifier<GLSLReadOnlyModifier>())
+        auto collection = d->findModifier<MemoryQualifierCollectionModifier>();
+        if(collection && collection->getMemoryQualifierBit() & MemoryQualifierCollectionModifier::Flags::kReadOnly)
             return false;
 
         return true;

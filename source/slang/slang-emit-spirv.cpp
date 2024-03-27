@@ -3294,36 +3294,47 @@ struct SPIRVEmitContext
             requireSPIRVCapability(SpvCapabilityRayQueryKHR);
             isRayTracingObject = true;
             break;
-        case kIROp_GloballyCoherentDecoration:
-            emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
-                               decoration,
-                               dstID,
-                               SpvDecorationCoherent);
+        case kIROp_MemoryQualifierCollectionDecoration:
+        {
+            auto collection = as<IRMemoryQualifierCollectionDecoration>(decoration);
+            IRIntegerValue flags = collection->getMemoryQualifierBit();
+            if (flags | MemoryQualifierCollectionModifier::Flags::kCoherent)
+            {
+                emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
+                    nullptr,
+                    dstID,
+                    SpvDecorationCoherent);
+            }
+            if (flags | MemoryQualifierCollectionModifier::Flags::kVolatile)
+            {
+                emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
+                    nullptr,
+                    dstID,
+                    SpvDecorationVolatile);
+            }
+            if (flags | MemoryQualifierCollectionModifier::Flags::kRestrict)
+            {
+                emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
+                    nullptr,
+                    dstID,
+                    SpvDecorationRestrict);
+            }
+            if (flags | MemoryQualifierCollectionModifier::Flags::kReadOnly)
+            {
+                emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
+                    nullptr,
+                    dstID,
+                    SpvDecorationNonWritable);
+            }
+            if (flags | MemoryQualifierCollectionModifier::Flags::kWriteOnly)
+            {
+                emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
+                    nullptr,
+                    dstID,
+                    SpvDecorationNonReadable);
+            }
             break;
-        case kIROp_GLSLVolatileDecoration:
-            emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
-                decoration,
-                dstID,
-                SpvDecorationVolatile);
-            break;
-        case kIROp_GLSLRestrictDecoration:
-            emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
-                decoration,
-                dstID,
-                SpvDecorationRestrict);
-            break;
-        case kIROp_GLSLReadOnlyDecoration:
-            emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
-                decoration,
-                dstID,
-                SpvDecorationNonWritable);
-            break;
-        case kIROp_GLSLWriteOnlyDecoration:
-            emitOpDecorate(getSection(SpvLogicalSectionID::Annotations),
-                decoration,
-                dstID,
-                SpvDecorationNonReadable);
-            break;
+        }
         // ...
         }
 
@@ -3416,15 +3427,16 @@ struct SPIRVEmitContext
                         id,
                         fieldNameDecor->getName());
                 }
-                else if (as<IRGloballyCoherentDecoration>(decor))
+                else if (auto collection = as<IRMemoryQualifierCollectionDecoration>(decor))
                 {
-                    emitOpMemberDecorate(
-                        getSection(SpvLogicalSectionID::Annotations),
-                        decor,
-                        spvStructID,
-                        SpvLiteralInteger::from32(id),
-                        SpvDecorationCoherent
-                    );
+                    if(collection->getMemoryQualifierBit() | MemoryQualifierCollectionModifier::Flags::kCoherent)
+                        emitOpMemberDecorate(
+                            getSection(SpvLogicalSectionID::Annotations),
+                            decor,
+                            spvStructID,
+                            SpvLiteralInteger::from32(id),
+                            SpvDecorationCoherent
+                        );
                 }
                 else if (auto semanticDecor = field->getKey()->findDecoration<IRSemanticDecoration>())
                 {
