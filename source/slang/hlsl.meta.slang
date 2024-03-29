@@ -9571,6 +9571,25 @@ void CallShader(uint shaderIndex, inout Payload payload)
 
 // 10.3.2
 
+// This intrinsic returns T if a struct. If T is a non struct, it returns a struct wrapped T
+// the intrinsic works as follows:
+// {NonStructToStructCopy; {pass as parameter}; StructToNonStructCopy;}
+__generic<T>
+__intrinsic_op($(kIROp_ForceVarIntoStructTemporarily))
+Ref<T> __forceVarIntoStructTemporarily(inout T maybeStruct);
+
+__target_intrinsic(hlsl, "TraceRay")
+[require(hlsl, raytracing)]
+__generic<payload_t>
+void __traceRayHLSL(
+        RaytracingAccelerationStructure AccelerationStructure,
+        uint RayFlags,
+        uint InstanceInclusionMask,
+        uint RayContributionToHitGroupIndex,
+        uint MultiplierForGeometryContributionToHitGroupIndex,
+        uint MissShaderIndex,
+        RayDesc Ray,
+        inout payload_t Payload);
 
 __target_intrinsic(_GL_EXT_ray_tracing, "traceRayEXT")
 [require(glsl, raytracing)]
@@ -9598,6 +9617,7 @@ __generic<Payload>
 __intrinsic_op($(kIROp_GetVulkanRayTracingPayloadLocation))
 int __rayPayloadLocation(__ref Payload payload);
 
+[ForceInline]
 [require(glsl, raytracing)]
 [require(spirv, raytracing)]
 [require(hlsl, raytracing)]
@@ -9614,7 +9634,17 @@ void TraceRay(
 {
     __target_switch
     {
-    case hlsl: __intrinsic_asm "TraceRay";
+    case hlsl:
+        __traceRayHLSL(
+            AccelerationStructure, 
+            RayFlags,
+            InstanceInclusionMask,
+            RayContributionToHitGroupIndex,
+            MultiplierForGeometryContributionToHitGroupIndex,
+            MissShaderIndex,
+            Ray,
+            __forceVarIntoStructTemporarily(Payload));
+        return;
     case cuda: __intrinsic_asm "traceOptiXRay";
     case glsl:
     {
@@ -9672,6 +9702,20 @@ void TraceRay(
 //
 // https://github.com/KhronosGroup/GLSL/blob/master/extensions/nv/GLSL_NV_ray_tracing_motion_blur.txt
 
+__target_intrinsic(hlsl, "TraceMotionRay")
+[require(hlsl, raytracing_motionblur)]
+__generic<payload_t>
+void __traceMotionRayHLSL(
+        RaytracingAccelerationStructure AccelerationStructure,
+        uint RayFlags,
+        uint InstanceInclusionMask,
+        uint RayContributionToHitGroupIndex,
+        uint MultiplierForGeometryContributionToHitGroupIndex,
+        uint MissShaderIndex,
+        RayDesc Ray,
+        float CurrentTime,
+        inout payload_t Payload);
+
 __glsl_extension(GL_NV_ray_tracing_motion_blur)
 __target_intrinsic(glsl, "traceRayMotionNV")
 [require(glsl, raytracing_motionblur)]
@@ -9689,6 +9733,7 @@ void __traceMotionRay(
     float                           CurrentTime,
     int                             PayloadLocation);
 
+[ForceInline]
 [require(glsl, raytracing_motionblur)]
 [require(spirv, raytracing_motionblur)]
 [require(hlsl, raytracing_motionblur)]
@@ -9706,7 +9751,18 @@ void TraceMotionRay(
 {
     __target_switch
     {
-    case hlsl: __intrinsic_asm "TraceMotionRay";
+    case hlsl: 
+        __traceMotionRayHLSL(
+            AccelerationStructure, 
+            RayFlags,
+            InstanceInclusionMask,
+            RayContributionToHitGroupIndex,
+            MultiplierForGeometryContributionToHitGroupIndex,
+            MissShaderIndex,
+            Ray,
+            CurrentTime,
+            __forceVarIntoStructTemporarily(Payload));
+        return;
     case glsl:
     {
         [__vulkanRayPayload]
@@ -11509,7 +11565,7 @@ struct HitObject
                     MultiplierForGeometryContributionToHitGroupIndex, 
                     MissShaderIndex, 
                     Ray, 
-                    Payload,
+                    __forceVarIntoStructTemporarily(Payload),
                     hitObj);
                 return hitObj;
             }
@@ -11595,7 +11651,16 @@ struct HitObject
         __target_switch
         {
         case hlsl:
-            __intrinsic_asm "TraceMotionRay";
+            __traceMotionRayHLSL(
+                AccelerationStructure,
+                RayFlags,
+                InstanceInclusionMask,
+                RayContributionToHitGroupIndex,
+                MultiplierForGeometryContributionToHitGroupIndex,
+                MissShaderIndex,
+                Ray,
+                CurrentTime,
+                __forceVarIntoStructTemporarily(Payload));
         case glsl:
             {
                 [__vulkanRayPayload]
@@ -12097,6 +12162,14 @@ struct HitObject
         }
     }
 
+    __target_intrinsic(hlsl, "NvInvokeHitObject")
+    [require(hlsl, ser)]
+    __generic<payload_t>
+    static void __InvokeHLSL(
+        RaytracingAccelerationStructure AccelerationStructure,
+        HitObject HitOrMiss,
+        inout payload_t Payload);
+
         /// Invokes closesthit or miss shading for the specified hit object. In case of a NOP HitObject, no
         /// shader is invoked.
     [__requiresNVAPI]
@@ -12111,7 +12184,11 @@ struct HitObject
     {
         __target_switch
         {
-        case hlsl: __intrinsic_asm "NvInvokeHitObject";
+        case hlsl:
+            __InvokeHLSL(
+                AccelerationStructure, 
+                HitOrMiss, 
+                __forceVarIntoStructTemporarily(Payload));
         case glsl:
             {
                 [__vulkanRayPayload]
