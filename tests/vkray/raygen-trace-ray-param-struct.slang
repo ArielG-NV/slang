@@ -9,7 +9,10 @@ struct testStruct
 
 RWStructuredBuffer<int> outputBuffer1;
 
-// CHECK: void main(
+// CHECK-DAG: TraceRay(
+// CHECK-DAG: TraceMotionRay(
+
+// CHECK-DAG: void main(
 void main()
 {
     RayDesc ray;
@@ -21,7 +24,6 @@ void main()
     testStruct someInData1;
     someInData1.data = 5;
 
-    // CHECK: TraceRay(
     TraceRay(as,
              1,
              0xff,
@@ -32,7 +34,6 @@ void main()
              someInData1);
     outputBuffer1[0] = outputBuffer1[0]+someInData1.data;
 
-    // CHECK: TraceMotionRay(
     TraceMotionRay(as,
             1,
             0xff,

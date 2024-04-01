@@ -9617,7 +9617,6 @@ __generic<Payload>
 __intrinsic_op($(kIROp_GetVulkanRayTracingPayloadLocation))
 int __rayPayloadLocation(__ref Payload payload);
 
-[ForceInline]
 [require(glsl, raytracing)]
 [require(spirv, raytracing)]
 [require(hlsl, raytracing)]
@@ -9733,7 +9732,6 @@ void __traceMotionRay(
     float                           CurrentTime,
     int                             PayloadLocation);
 
-[ForceInline]
 [require(glsl, raytracing_motionblur)]
 [require(spirv, raytracing_motionblur)]
 [require(hlsl, raytracing_motionblur)]

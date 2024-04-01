@@ -14,6 +14,14 @@ void addComplexity2(float dataIn)
     outputBuffer1[2] = dataIn;
 }
 
+// CHECK-DAG: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = {{.*}}
+// CHECK-DAG: TraceRay(
+// CHECK-DAG: {{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
+
+// CHECK-DAG: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = {{.*}}
+// CHECK-DAG: TraceMotionRay(
+// CHECK-DAG: {{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
+
 void main()
 {
     RayDesc ray;
@@ -26,9 +34,6 @@ void main()
     float someInData1 = 5.0f;
     addComplexity1(someInData1);
 
-    // CHECK: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = someInData
-    // CHECK: TraceRay(
-    // CHECK: someInData1{{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
     TraceRay(as,
              1,
              0xff,
@@ -39,9 +44,6 @@ void main()
              someInData1);
     outputBuffer1[0] = outputBuffer1[0]+someInData1;
 
-    // CHECK: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = someInData
-    // CHECK: TraceMotionRay(
-    // CHECK: someInData1{{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
     TraceMotionRay(as,
             1,
             0xff,
@@ -53,9 +55,9 @@ void main()
             someInData1);
     outputBuffer1[0] = outputBuffer1[0]+someInData1;
 
-    // CHECK: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = someInData
+    // CHECK: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = {{.*}}
     // CHECK: NvTraceRayHitObject(
-    // CHECK: someInData1{{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
+    // CHECK: {{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
     HitObject::TraceRay(as,
              1,
              0xff,
@@ -66,9 +68,9 @@ void main()
              someInData1);
     outputBuffer1[0] = outputBuffer1[0]+someInData1;
 
-    // CHECK: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = someInData
+    // CHECK: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = {{.*}}
     // CHECK: TraceMotionRay(
-    // CHECK: someInData1{{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
+    // CHECK: {{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
     HitObject::TraceMotionRay(as,
             1,
             0xff,
@@ -80,9 +82,9 @@ void main()
             someInData1);
     outputBuffer1[0] = outputBuffer1[0]+someInData1;
 
-    // CHECK: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = someInData
+    // CHECK: forceVarIntoStructTemporarily{{_[0-9]}}.data{{_[0-9]}} = {{.*}}
     // CHECK: NvInvokeHitObject(
-    // CHECK: someInData1{{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
+    // CHECK: {{.*}} = forceVarIntoStructTemporarily{{.*}}.data{{.*}};
     HitObject hitObject_HitOrMiss;
     HitObject::Invoke(
         as,
