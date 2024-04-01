@@ -841,17 +841,17 @@ Result linkAndOptimizeIR(
     }
 
     // Legalize non struct parameters that are expected to be structs for HLSL. 
-        switch (target)
+    switch (target)
+    {
+    case CodeGenTarget::HLSL:
         {
-        case CodeGenTarget::HLSL:
-            {
-                legalizeNonStructParameterToStructAndBackHLSL(irModule);
-            }
-            break;
-
-        default:
-            break;
+            legalizeNonStructParameterToStructAndBackHLSL(irModule);
         }
+        break;
+
+    default:
+        break;
+    }
     // Legalize `ImageSubscript` and constant buffer loads for GLSL.
     switch (target)
     {

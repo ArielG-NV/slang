@@ -26,7 +26,7 @@ void searchChildrenForForceVarIntoStructTemporarily(IRModule* module, IRInst* in
         case kIROp_Call:
         {
             auto call = as<IRCall>(child);
-            for(int i = 0; i < call->getArgCount(); i++)
+            for(UInt i = 0; i < call->getArgCount(); i++)
             {
                 auto arg = call->getArg(i);
                 if(arg->getOp() != kIROp_ForceVarIntoStructTemporarily)
