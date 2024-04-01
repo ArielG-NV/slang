@@ -921,6 +921,15 @@ namespace Slang
             return result;
         }
 
+        SemanticsContext withDeclToExcludeFromLookup(Decl* decl)
+        {
+            SemanticsContext result(*this);
+            result.m_declToExcludeFromLookup = decl;
+            return result;
+        }
+
+        Decl* getDeclToExcludeFromLookup() { return m_declToExcludeFromLookup; }
+
     private:
         SharedSemanticsContext* m_shared = nullptr;
 
@@ -928,6 +937,7 @@ namespace Slang
 
         ExprLocalScope* m_exprLocalScope = nullptr;
 
+        Decl* m_declToExcludeFromLookup = nullptr;
 
     protected:
         // TODO: consider making more of this state `private`...
@@ -2067,6 +2077,9 @@ namespace Slang
             Type* toType,
             QualType fromType);
 
+        bool canConvertImplicitly(
+            ConversionCost cost);
+
         ConversionCost getConversionCost(Type* toType, QualType fromType);
 
         Type* _tryJoinTypeWithInterface(
@@ -2467,6 +2480,7 @@ namespace Slang
         Expr* CheckExpr(Expr* expr);
 
 
+        void compareMemoryQualifierOfParamToArgument(ParamDecl* paramIn, Expr* argIn);
         Expr* CheckInvokeExprWithCheckedOperands(InvokeExpr *expr);
         // Get the type to use when referencing a declaration
         QualType GetTypeForDeclRef(DeclRef<Decl> declRef, SourceLoc loc);

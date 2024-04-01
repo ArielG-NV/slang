@@ -944,7 +944,27 @@ namespace Slang
                 }
             }
 
+            // Ensures child of struct is set read-only or not
+            bool isWriteOnly = false;
+            {
+                for (auto mod : varDeclRef.getDecl()->modifiers)
+                {
+                    if (as<GLSLReadOnlyModifier>(mod))
+                    {
+                        isLValue = false;
+                        qualType.hasReadOnlyOnTarget = true;
+                        if (isLValue == false && isWriteOnly) break;
+                    }
+                    if (as<GLSLWriteOnlyModifier>(mod))
+                    {
+                        isWriteOnly = true;
+                        if (isLValue == false && isWriteOnly) break;
+                    }
+                }
+            }
+
             qualType.isLeftValue = isLValue;
+            qualType.isWriteOnly = isWriteOnly;
             return qualType;
         }
         else if( auto propertyDeclRef = declRef.as<PropertyDecl>() )
@@ -1527,7 +1547,8 @@ namespace Slang
             }
             else
             {
-                initExpr = CheckExpr(initExpr);
+                SemanticsVisitor subVisitor(withDeclToExcludeFromLookup(varDecl));
+                initExpr = subVisitor.CheckExpr(initExpr);
 
                 // TODO: We might need some additional steps here to ensure
                 // that the type of the expression is one we are okay with
@@ -1548,7 +1569,8 @@ namespace Slang
         {
             // A variable with an explicit type is simpler, for the
             // most part.
-            TypeExp typeExp = CheckUsableType(varDecl->type);
+            SemanticsVisitor subVisitor(withDeclToExcludeFromLookup(varDecl));
+            TypeExp typeExp = subVisitor.CheckUsableType(varDecl->type);
             varDecl->type = typeExp;
             if (varDecl->type.equals(m_astBuilder->getVoidType()))
             {
@@ -1846,6 +1868,8 @@ namespace Slang
                 //
             initExpr = subVisitor.CheckTerm(initExpr);
 
+            if (initExpr->type.isWriteOnly)
+                getSink()->diagnose(initExpr, Diagnostics::readingFromWriteOnly);
             initExpr = coerce(CoercionSite::Initializer, varDecl->type.Ptr(), initExpr);
             varDecl->initExpr = initExpr;
 
@@ -6181,7 +6205,8 @@ namespace Slang
 
     void SemanticsDeclHeaderVisitor::visitTypeDefDecl(TypeDefDecl* decl)
     {
-        decl->type = CheckProperType(decl->type);
+        SemanticsVisitor visitor(withDeclToExcludeFromLookup(decl));
+        decl->type = visitor.CheckProperType(decl->type);
         checkVisibility(decl);
     }
 
@@ -6975,7 +7000,8 @@ namespace Slang
         auto typeExpr = paramDecl->type;
         if(typeExpr.exp)
         {
-            typeExpr = CheckUsableType(typeExpr);
+            SemanticsVisitor subVisitor(withDeclToExcludeFromLookup(paramDecl));
+            typeExpr = subVisitor.CheckUsableType(typeExpr);
             paramDecl->type = typeExpr;
             checkMeshOutputDecl(paramDecl);
         }
@@ -7022,6 +7048,16 @@ namespace Slang
                         newModifiers[i]->next = nullptr;
                 }
             }
+        }
+
+        // Only texture types are allowed to have memory qualifiers on parameters
+        if(!paramDecl->type || paramDecl->type->astNodeType != ASTNodeType::TextureType)
+        {
+            auto memoryQualifierCollection = paramDecl->findModifier<MemoryQualifierCollectionModifier>();
+            if(!memoryQualifierCollection) 
+                return;
+            for(auto mod : memoryQualifierCollection->getModifiers())
+                getSink()->diagnose(paramDecl, Diagnostics::memoryQualifierNotAllowedOnANonImageTypeParameter, mod);
         }
     }
 
@@ -7607,7 +7643,8 @@ namespace Slang
 
     void SemanticsDeclHeaderVisitor::visitPropertyDecl(PropertyDecl* decl)
     {
-        decl->type = CheckUsableType(decl->type);
+        SemanticsVisitor subVisitor(withDeclToExcludeFromLookup(decl));
+        decl->type = subVisitor.CheckUsableType(decl->type);
         visitAbstractStorageDeclCommon(decl);
         checkVisibility(decl);
     }
