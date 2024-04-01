@@ -1,5 +1,5 @@
 // slang-ir-hlsl-legalize.cpp
-#include "slang-ir-glsl-legalize.h"
+#include "slang-ir-hlsl-legalize.h"
 
 #include <functional>
 
@@ -8,7 +8,6 @@
 #include "slang-ir-inst-pass-base.h"
 #include "slang-ir-specialize-function-call.h"
 #include "slang-ir-util.h"
-#include "../../external/spirv-headers/include/spirv/unified1/spirv.h"
 
 namespace Slang
 {
@@ -38,14 +37,15 @@ void searchChildrenForForceVarIntoStructTemporarily(IRModule* module, IRInst* in
                 {
                     arg->replaceUsesWith(arg->getOperand(0));
                     arg->removeAndDeallocate();
-                    continue;   
+                    continue;
                 }
 
-                // Replace all non struct inputs with a pattern:
-                // {NonStructToStructCopy; {pass as parameter to kIROp_Call}; StructToNonStructCopy;}
+                // Replace all non struct inputs with following logic
+                // {`Non-struct var` to `struct var` copy }
+                // {Use `struct var` made as parameter to kIROp_Call}
+                // if(parameterIsPointerLikeTypeWhichMayHaveSideEffectsOnParameter) {`Struct var` to `non-struct` var copy}
                 IRBuilder builder(call);
 
-                // emit struct before function use                
                 builder.setInsertBefore(call->getCallee());
                 auto structType = builder.createStructType();
                 StringBuilder structName;
@@ -55,25 +55,24 @@ void searchChildrenForForceVarIntoStructTemporarily(IRModule* module, IRInst* in
                 builder.addNameHintDecoration(elementBufferKey, UnownedStringSlice("data"));
                 auto _dataField = builder.createStructField(structType, elementBufferKey, forceStructBaseType);
 
-                // emit copy to struct
                 builder.setInsertBefore(call);
                 auto structVar = builder.emitVar(structType);
                 builder.addNameHintDecoration(structVar, UnownedStringSlice("forceVarIntoStructTemporarily"));
                 builder.emitStore(
                     builder.emitFieldAddress(builder.getPtrType(_dataField->getFieldType()), structVar, _dataField->getKey()),
-                    builder.emitLoad(forceStructArg)
-                    );
+                    builder.emitLoad(forceStructArg));
 
-                // replace kIROp_ForceVarIntoStructTemporarily with struct created
                 arg->replaceUsesWith(structVar);
                 arg->removeAndDeallocate();
 
-                // emit copy to non-struct
+                auto argType = call->getCallee()->getDataType()->getOperand(i+1);
+                if (!isPtrLikeOrHandleType(argType))
+                    continue;
+
                 builder.setInsertAfter(call);
                 builder.emitStore(
                     forceStructArg,
-                    builder.emitFieldAddress(builder.getPtrType(_dataField->getFieldType()), structVar, _dataField->getKey())
-                    );
+                    builder.emitFieldAddress(builder.getPtrType(_dataField->getFieldType()), structVar, _dataField->getKey()));
             }
             break;
         }
@@ -85,10 +84,9 @@ void legalizeNonStructParameterToStructAndBackHLSL(IRModule* module)
 {
     for(const auto globalInst : module->getGlobalInsts())
     {
-        if(globalInst->getOp() == kIROp_Func)
-        {
-            searchChildrenForForceVarIntoStructTemporarily(module, globalInst);
-        }
+        if (globalInst->getOp() != kIROp_Func)
+            continue;
+        searchChildrenForForceVarIntoStructTemporarily(module, globalInst);
     }
 }
 

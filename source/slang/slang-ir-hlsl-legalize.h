@@ -9,8 +9,6 @@ namespace Slang
 class DiagnosticSink;
 class Session;
 
-class GLSLExtensionTracker;
-
 struct IRFunc;
 struct IRModule;
 

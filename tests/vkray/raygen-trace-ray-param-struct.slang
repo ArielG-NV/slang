@@ -1,7 +1,5 @@
 //TEST:SIMPLE(filecheck=CHECK): -target hlsl -stage raygeneration -entry main
 
-#define TRACING_EPSILON 1e-6
-
 RaytracingAccelerationStructure as;
 
 struct testStruct
@@ -16,7 +14,7 @@ void main()
 {
     RayDesc ray;
     ray.Origin = float3(0);
-    ray.TMin = TRACING_EPSILON;
+    ray.TMin = 1e-6;
     ray.Direction = float3(0,0,1);
     ray.TMax = 100.0f;
 
@@ -70,7 +68,7 @@ void main()
     outputBuffer1[0] = outputBuffer1[0]+someInData1.data;
 
     // CHECK: NvInvokeHitObject(
-    HitObject hitObject_HitOrMiss; 
+    HitObject hitObject_HitOrMiss;
     HitObject::Invoke(
         as,
         hitObject_HitOrMiss,

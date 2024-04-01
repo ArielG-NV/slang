@@ -9636,7 +9636,7 @@ void TraceRay(
     {
     case hlsl:
         __traceRayHLSL(
-            AccelerationStructure, 
+            AccelerationStructure,
             RayFlags,
             InstanceInclusionMask,
             RayContributionToHitGroupIndex,
@@ -9751,9 +9751,9 @@ void TraceMotionRay(
 {
     __target_switch
     {
-    case hlsl: 
+    case hlsl:
         __traceMotionRayHLSL(
-            AccelerationStructure, 
+            AccelerationStructure,
             RayFlags,
             InstanceInclusionMask,
             RayContributionToHitGroupIndex,
@@ -12186,8 +12186,8 @@ struct HitObject
         {
         case hlsl:
             __InvokeHLSL(
-                AccelerationStructure, 
-                HitOrMiss, 
+                AccelerationStructure,
+                HitOrMiss,
                 __forceVarIntoStructTemporarily(Payload));
         case glsl:
             {
