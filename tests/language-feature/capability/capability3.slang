@@ -1,47 +1,38 @@
 //TEST:SIMPLE(filecheck=CHECK): -target spirv -emit-spirv-directly -entry main -stage compute
 
 // Test that capabilities can be declared on module.
-
 [require(glsl)]
 [require(spirv)]
 module test;
 
-void f()
-{
-    __require_capability glsl;
-}
+RWStructuredBuffer<int> sideEffect;
 
-// CHECK: ([[# @LINE+1]]): error 36108
-public void g()
-{
-    __require_capability spvAtomicFloat16AddEXT;
-}
-
-void l()
+// CHECK: error 36104
+[require(spirv, hlsl)]
+public void use1()
 {
     __target_switch
     {
-    case glsl:
-        f();
-        return;
     case spirv:
-        __require_capability spvAtomicFloat16AddEXT;
+        sideEffect[0] = 2;
         return;
     }
 }
 
-// CHECK: ([[# @LINE+1]]): error 36104: {{.*}}
-public void use()
+[require(glsl)]
+void use2Sub()
 {
-    l(); // Error
+    sideEffect[1] = 1;
 }
-
-// CHECK-NOT: ([[# @LINE+1]]): error
-[require(spirv, spvAtomicFloat16AddEXT)]
-public void use1()
+// CHECK: error 36108
+[require(spirv)]
+public void use2()
 {
-    l(); // Error
+    use2Sub();   
 }
 
 void main()
-{}
+{
+    use1();
+    use2();
+}
