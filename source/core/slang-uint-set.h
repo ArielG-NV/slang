@@ -71,7 +71,6 @@ public:
     UIntSet(const UIntSet& other) { m_buffer = other.m_buffer; }
     UIntSet(UIntSet && other) { *this = (_Move(other)); }
     UIntSet(UInt maxVal) { resizeAndClear(maxVal); }
-    UIntSet(List<UIntSet::Element> buffer) { m_buffer = buffer; }
 
     UIntSet& operator=(UIntSet&& other);
     UIntSet& operator=(const UIntSet& other);
@@ -101,6 +100,7 @@ public:
         /// Add a value
     inline void add(UInt val);
     inline void add(const UIntSet& val);
+    inline void add(const List<UIntSet::Element>& buffer);
 
         /// Remove a value
     inline void remove(UInt val);
@@ -145,37 +145,37 @@ public:
     {
         friend class UIntSet;
     private:
-        const List<Element>* context;
-        Index block = 0;
-        Element processedElement = 0;
-        uint64_t LSB = 0;
+        const List<Element>* m_context;
+        Index m_block = 0;
+        Element m_processedElement = 0;
+        uint64_t m_LSB = 0;
 
         void clearLSB()
         {
-            LSB = bitscanForward(processedElement);
-            processedElement &= processedElement - 1;
+            m_LSB = bitscanForward(m_processedElement);
+            m_processedElement &= m_processedElement - 1;
         }
     public:
-        Iterator(const List<Element>* inContext)
+        Iterator(const List<Element>* context)
         {
-            context = inContext;
+            m_context = context;
         }
 
         Element operator*()
         {
-            return Element(LSB + (kElementSize * block));
+            return Element(m_LSB + (kElementSize * m_block));
         }
 
         Iterator& operator++()
         {
-            while (processedElement == 0)
+            while (m_processedElement == 0)
             {
-                block++;
-                if (block >= context->getCount())
+                m_block++;
+                if (m_block >= m_context->getCount())
                 {
                     return *this;
                 }
-                processedElement = (*context)[block];
+                m_processedElement = (*m_context)[m_block];
             }
             clearLSB();
             return *this;
@@ -186,8 +186,8 @@ public:
         }
         bool operator==(const Iterator& other) const
         {
-            return other.block == this->block
-                && other.processedElement == this->processedElement;
+            return other.m_block == this->m_block
+                && other.m_processedElement == this->m_processedElement;
         }
         bool operator!=(const Iterator& other) const
         {
@@ -200,8 +200,8 @@ public:
         if (m_buffer.getCount() == 0)
             return tmp;
 
-        tmp.processedElement = m_buffer[0];
-        if (tmp.processedElement == 0)
+        tmp.m_processedElement = m_buffer[0];
+        if (tmp.m_processedElement == 0)
         {
             tmp++;
             return tmp;
@@ -213,8 +213,8 @@ public:
     Iterator end() const
     {
         Iterator tmp(&m_buffer);
-        tmp.block = m_buffer.getCount();
-        tmp.processedElement = 0;
+        tmp.m_block = m_buffer.getCount();
+        tmp.m_processedElement = 0;
         return tmp;
     }
 
@@ -307,6 +307,17 @@ inline void UIntSet::add(const UIntSet& other)
 
     for (auto i = 0; i < otherCount; i++)
         m_buffer[i] |= other.m_buffer[i];
+}
+
+inline void UIntSet::add(const List<Element>& other)
+{
+    if (this->m_buffer.getCount() == 0)
+    {
+        this->m_buffer = other;
+        return;
+    }
+    for (auto i : other)
+        this->add(i);
 }
 
 template<typename T>

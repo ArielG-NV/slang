@@ -73,6 +73,10 @@ struct CapabilityStageSet
         else
             atomSet->add(setToAdd);
     }
+
+    /// Join `this` with a compatble stage set of `CapabilityTargetSet other`.
+    /// Return false when `other` is fully incompatible.
+    /// incompatability is when `this->stage` is not a supported stage by `other.shaderStageSets`.
     bool tryJoin(const CapabilityTargetSet& other);
 };
 
@@ -85,9 +89,11 @@ struct CapabilityTargetSet
 
     CapabilityStageSets shaderStageSets{};
 
-    /// Join `this` with a compatble stage set of `CapabilityTargetSet other`.
+    /// Join a compatable target set from `this` with `CapabilityTargetSet other`.
     /// Return false when `other` is fully incompatible.
-    /// incompatability is when `this->stage` is not a supported stage by `other.shaderStageSets`.
+    /// incompatability is when one of 2 senarios are true:
+    /// 1. `this->target` is not a supported target by `other.shaderStageSets`
+    /// 2. `this` has completly disjoint shader stages from other.
     bool tryJoin(const CapabilityTargetSets& other);
     void unionWith(const CapabilityTargetSet& other);
 };

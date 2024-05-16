@@ -101,7 +101,8 @@ struct SerialTypeInfo<CapabilityAtomSet>
         List<CapabilityAtomSet::Element> UIntSetBuffer;
         reader->getArray(src, UIntSetBuffer);
 
-        dst = CapabilityAtomSet(UIntSetBuffer);
+        dst = CapabilityAtomSet();
+        dst.add(UIntSetBuffer);
     }
 };
 
@@ -244,11 +245,9 @@ struct SerialTypeInfo<CapabilitySet>
         auto& targetSets = dst.getCapabilityTargetSets();
         targetSets.clear();
         targetSets.reserve(items.getCount());
-        Index iter = 0;
         for (auto& i : items)
         {
             targetSets[i.target] = i;
-            iter++;
         }
     }
 };
