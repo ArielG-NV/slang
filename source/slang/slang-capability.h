@@ -85,6 +85,9 @@ struct CapabilityTargetSet
 
     CapabilityStageSets shaderStageSets{};
 
+    /// Join `this` with a compatble stage set of `CapabilityTargetSet other`.
+    /// Return false when `other` is fully incompatible.
+    /// incompatability is when `this->stage` is not a supported stage by `other.shaderStageSets`.
     bool tryJoin(const CapabilityTargetSets& other);
     void unionWith(const CapabilityTargetSet& other);
 };
@@ -157,6 +160,9 @@ public:
     void addCapability(List<List<CapabilityAtom>>& atomLists);
     /// Calculate a list of "compacted" atoms, which excludes any atoms from the expanded list that are implies by another item in the list.
 
+    /// returns true if 'this' is a better target for 'targetCaps' than 'that'
+    /// isEqual: is `this` and `that` equal
+    /// isIncompatible: is `this` and `that` incompatible
     bool isBetterForTarget(CapabilitySet const& that, CapabilitySet const& targetCaps, bool& isEqual) const;
 
     /// Find any capability sets which are in 'available' but not in 'required'. Return false if this situation occurs. 

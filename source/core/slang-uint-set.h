@@ -81,7 +81,7 @@ public:
     /// Return the count of all bits directly represented
     Int getCount() const { return Int(m_buffer.getCount()) * kElementSize; }
 
-    List<Element>& getBuffer() { return m_buffer; }
+    const List<Element>& getBuffer() const { return m_buffer; }
 
         /// Resize such that val can be stored and clear contents
     void resizeAndClear(UInt val);
@@ -202,10 +202,12 @@ public:
 
         tmp.processedElement = m_buffer[0];
         if (tmp.processedElement == 0)
+        {
             tmp++;
+            return tmp;
+        }
 
         tmp.clearLSB();
-
         return tmp;
     }
     Iterator end() const
