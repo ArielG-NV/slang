@@ -102,7 +102,8 @@ struct SerialTypeInfo<CapabilityAtomSet>
         reader->getArray(src, UIntSetBuffer);
 
         dst = CapabilityAtomSet();
-        dst.add(UIntSetBuffer);
+        for(Index i = 0; i < UIntSetBuffer.getCount(); i++)
+            dst.addRawElement(UIntSetBuffer[i], i);
     }
 };
 

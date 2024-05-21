@@ -14,19 +14,9 @@
 namespace Slang
 {
 
-template<typename T>
-constexpr static Index computeElementShift()
+constexpr Index intLog2(unsigned x)
 {
-    Index currentShift = 0;
-    Index currentShiftValue = 1;
-
-    while (currentShiftValue != sizeof(T) * 8)
-    {
-        currentShift++;
-        currentShiftValue *= 2;
-    }
-
-    return currentShift;
+    return x == 1 ? 0 : 1 + intLog2(x >> 1);
 }
 
 static inline Index bitscanForward(uint64_t in)
@@ -65,7 +55,7 @@ public:
     
     constexpr static Index kElementSize = sizeof(Element) * 8; ///< The number of bits in an element. This also determines how many values a element can hold.
     constexpr static Index kElementMask = kElementSize - 1; ///< Mask to get shift from an index
-    constexpr static Index kElementShift = computeElementShift<Element>(); ///< How many bits to shift to get Element index from an index. 5 for 2^5=32 elements in a uint32_t. 6 for 2^6=64 in a uint64_t.
+    constexpr static Index kElementShift = intLog2(sizeof(Element)*8); ///< How many bits to shift to get Element index from an index. 5 for 2^5=32 elements in a uint32_t. 6 for 2^6=64 in a uint64_t.
 
     UIntSet() {}
     UIntSet(const UIntSet& other) { m_buffer = other.m_buffer; }
@@ -100,7 +90,9 @@ public:
         /// Add a value
     inline void add(UInt val);
     inline void add(const UIntSet& val);
-    inline void add(const List<UIntSet::Element>& buffer);
+    inline void add(const List<Element>& other);
+
+    inline void addRawElement(UInt val, Index bitOffset); 
 
         /// Remove a value
     inline void remove(UInt val);
@@ -311,13 +303,15 @@ inline void UIntSet::add(const UIntSet& other)
 
 inline void UIntSet::add(const List<Element>& other)
 {
-    if (this->m_buffer.getCount() == 0)
-    {
-        this->m_buffer = other;
-        return;
-    }
     for (auto i : other)
-        this->add(i);
+        add(i);
+}
+
+inline void UIntSet::addRawElement(UInt other, Index elementIndex)
+{
+    if(this->m_buffer.getCount() <= elementIndex)
+        resizeBackingBufferDirectly(elementIndex+1);
+    m_buffer[elementIndex] |= other;
 }
 
 template<typename T>

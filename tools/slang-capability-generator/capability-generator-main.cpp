@@ -418,14 +418,15 @@ void outputUIntSetAsBufferValues(const String& nameOfBuffer, StringBuilder& resu
     resultBuilder << "inline static CapabilityAtomSet generate_" << nameOfBuffer << "()\n";
     resultBuilder << "{\n";
     resultBuilder << "    CapabilityAtomSet generatedSet;\n";
-    for (auto i : set.getBuffer())
+
+    for (Index i = 0; i < set.getBuffer().getCount(); i++)
     {
-        resultBuilder << "    generatedSet.add(UIntSet::Element(" << i << "));\n";
+        resultBuilder << "    generatedSet.addRawElement(UIntSet::Element(" << set.getBuffer()[i] << "), " << i << ");\n";
     }
     resultBuilder << "    return generatedSet;\n";
     resultBuilder << "}\n";
 
-    resultBuilder << "const static CapabilityAtomSet " << nameOfBuffer << ";// = generate_" << nameOfBuffer << "();\n";
+    resultBuilder << "const static CapabilityAtomSet " << nameOfBuffer << " = generate_" << nameOfBuffer << "();\n";
 }
 
 SlangResult generateDefinitions(const List<RefPtr<CapabilityDef>>& defs, StringBuilder& sbHeader, StringBuilder& sbCpp)
