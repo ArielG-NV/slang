@@ -28,11 +28,11 @@ DIAGNOSTIC(-1, Note, seeDefinitionOf, "see definition of '$0'")
 // 0xxxx -  Command line and interaction with host platform APIs.
 //
 
-DIAGNOSTIC(    1, Error, cannotOpenFile, "cannot open file '$0'.")
-DIAGNOSTIC(    2, Error, cannotFindFile, "cannot find file '$0'.")
-DIAGNOSTIC(    4, Error, cannotWriteOutputFile, "cannot write output file '$0'.")
-DIAGNOSTIC(    5, Error, failedToLoadDynamicLibrary, "failed to load dynamic library '$0'")
-DIAGNOSTIC(    6, Error, tooManyOutputPathsSpecified, "$0 output paths specified, but only $1 entry points given")
+DIAGNOSTIC(1, Error, cannotOpenFile, "cannot open file '$0'.")
+DIAGNOSTIC(2, Error, cannotFindFile, "cannot find file '$0'.")
+DIAGNOSTIC(4, Error, cannotWriteOutputFile, "cannot write output file '$0'.")
+DIAGNOSTIC(5, Error, failedToLoadDynamicLibrary, "failed to load dynamic library '$0'")
+DIAGNOSTIC(6, Error, tooManyOutputPathsSpecified, "$0 output paths specified, but only $1 entry points given")
 
 //
 // 2xxxx - Parsing
@@ -54,4 +54,6 @@ DIAGNOSTIC(20001, Error, unexpectedEOF, " Unexpected end of file.")
 DIAGNOSTIC(20002, Error, syntaxError, "syntax error.")
 DIAGNOSTIC(20003, Error, undefinedIdentifier, "undefined identifier \"$0\".")
 DIAGNOSTIC(20004, Error, redefinition, "capability redefinition: '$0'.")
+DIAGNOSTIC(20005, Error, unionWithSameAbstractAtomDisjointCapabilitySets, "unioning ('|') capability sets inside atom which have the same abstract atoms, this->target: '$0', other->target: '$1', this->stage: '$2', other->stage: '$3'")
+
 #undef DIAGNOSTIC
