@@ -292,7 +292,6 @@ void calcRequiredLoweringPassSet(RequiredLoweringPassSet& result, CodeGenContext
     case kIROp_BackwardDifferentiate:
     case kIROp_ForwardDifferentiate:
     case kIROp_MakeDifferentialPairUserCode:
-    case kIROp_DerivativeMemberDecoration:
         result.autodiff = true;
         break;
     case kIROp_VerticesType:
@@ -708,6 +707,9 @@ Result linkAndOptimizeIR(
 
     if (requiredLoweringPassSet.autodiff)
         finalizeAutoDiffPass(targetProgram, irModule);
+
+    // Remove auto-diff related decorations. We may have a autodiff decoration without requirment to run the autodiff-pass
+    stripAutoDiffDecorations(irModule);
 
     finalizeSpecialization(irModule);
 
