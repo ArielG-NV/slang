@@ -2383,6 +2383,12 @@ struct IRStructuredBufferGetDimensions : IRInst
     IRInst* getBuffer() { return getOperand(0); }
 };
 
+struct IRTranspose : IRInst
+{
+    IR_LEAF_ISA(Transpose);
+    IRInst* getTarget() { return getOperand(0); }
+};
+
 struct IRNonUniformResourceIndex : IRInst
 {
     IR_LEAF_ISA(NonUniformResourceIndex);
@@ -4069,6 +4075,9 @@ public:
     IRInst* emitImageStore(
         IRType* type,
         ShortList<IRInst*> params);
+
+    IRInst* IRBuilder::emitTranspose(
+        IRInst* inst);
 
     IRInst* emitIsType(IRInst* value, IRInst* witness, IRInst* typeOperand, IRInst* targetWitness);
 

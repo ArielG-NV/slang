@@ -326,6 +326,8 @@ INST(AllocObj, allocObj, 0, 0)
 
 INST(GlobalValueRef, globalValueRef, 1, 0)
 
+INST(CastMatrixToMatrix, castMatrixToMatrix, 1, 0)
+
 INST(MakeUInt64, makeUInt64, 2, 0)
 INST(MakeVector, makeVector, 0, 0)
 INST(MakeMatrix, makeMatrix, 0, 0)
@@ -601,6 +603,11 @@ INST(RequirePrelude, RequirePrelude, 1, 0)
 INST(RequireGLSLExtension, RequireGLSLExtension, 1, 0)
 INST(RequireComputeDerivative, RequireComputeDerivative, 0, 0)
 INST(StaticAssert, StaticAssert, 2, 0)
+
+//// Special case of explicit multiply to handle GLSL infix `*` versus `mul`
+INST(ExplicitMul, ExplicitMul, 2, 0)
+
+INST(Transpose, Transpose, 1, 0)
 
 // TODO: We should consider splitting the basic arithmetic/comparison
 // ops into cases for signed integers, unsigned integers, and floating-point

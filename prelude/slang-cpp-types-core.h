@@ -1,6 +1,8 @@
 #ifndef SLANG_PRELUDE_CPP_TYPES_CORE_H
 #define SLANG_PRELUDE_CPP_TYPES_CORE_H
 
+#define SLANG_CUDA_CALL
+
 #ifndef SLANG_PRELUDE_ASSERT
 #   ifdef SLANG_PRELUDE_ENABLE_ASSERT
 #       define SLANG_PRELUDE_ASSERT(VALUE) assert(VALUE)
@@ -572,6 +574,8 @@ TResult slang_bit_cast(TInput val)
 {
     return *(TResult*)(&val);
 }
+
+#include "slang-cpp-cuda-shared.h"
 
 #endif
 

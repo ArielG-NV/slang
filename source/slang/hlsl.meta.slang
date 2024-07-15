@@ -7539,6 +7539,7 @@ T dot(vector<T, N> x, vector<T, N> y)
     case spirv: return spirv_asm {
         OpDot $$T result $x $y
     };
+    case cpp: __intrinsic_asm "_slang_dot";
     default:
         T result = T(0);
         for(int i = 0; i < N; ++i)
@@ -11041,266 +11042,75 @@ matrix<T, N, M> mul(T x, matrix<T, N, M> y);
 
 // vector-vector (dot product)
 __generic<T : __BuiltinFloatingPointType, let N : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-T mul(vector<T, N> x, vector<T, N> y)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "dot";
-    case metal: __intrinsic_asm "dot";
-    case hlsl: __intrinsic_asm "mul";
-    default:
-        return dot(x, y);
-    }
-}
+T mul(vector<T, N> x, vector<T, N> y);
+
 __generic<T : __BuiltinIntegerType, let N : int>
+__spirv_version(1.6)
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-T mul(vector<T, N> x, vector<T, N> y)
-{
-    __target_switch
-    {
-    case hlsl: __intrinsic_asm "mul";
-    default:
-        return dot(x, y);
-    }
-}
+T mul(vector<T, N> x, vector<T, N> y);
 
 // vector-matrix
 __generic<T : __BuiltinFloatingPointType, let N : int, let M : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-vector<T, M> mul(vector<T, N> left, matrix<T, N, M> right)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "($1 * $0)";
-    case metal: __intrinsic_asm "($1 * $0)";
-    case hlsl: __intrinsic_asm "mul";
-    case spirv: return spirv_asm {
-        OpMatrixTimesVector $$vector<T, M> result $right $left
-    };
-    default:
-        vector<T,M> result;
-        for( int j = 0; j < M; ++j )
-        {
-            T sum = T(0);
-            for( int i = 0; i < N; ++i )
-            {
-                sum += left[i] * right[i][j];
-            }
-            result[j] = sum;
-        }
-        return result;
-    }
-}
+vector<T, M> mul(vector<T, N> left, matrix<T, N, M> right);
+
 __generic<T : __BuiltinIntegerType, let N : int, let M : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-vector<T, M> mul(vector<T, N> left, matrix<T, N, M> right)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "($1 * $0)";
-    case metal: __intrinsic_asm "($1 * $0)";
-    case hlsl: __intrinsic_asm "mul";
-    default:
-        vector<T,M> result;
-        for( int j = 0; j < M; ++j )
-        {
-            T sum = T(0);
-            for( int i = 0; i < N; ++i )
-            {
-                sum += left[i] * right[i][j];
-            }
-            result[j] = sum;
-        }
-        return result;
-    }
-}
+vector<T, M> mul(vector<T, N> left, matrix<T, N, M> right);
+
 __generic<T : __BuiltinLogicalType, let N : int, let M : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-vector<T, M> mul(vector<T, N> left, matrix<T, N, M> right)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "($1 * $0)";
-    case metal: __intrinsic_asm "($1 * $0)";
-    case hlsl: __intrinsic_asm "mul";
-    default:
-        vector<T,M> result;
-        for( int j = 0; j < M; ++j )
-        {
-            T sum = T(0);
-            for( int i = 0; i < N; ++i )
-            {
-                sum |= left[i] & right[i][j];
-            }
-            result[j] = sum;
-        }
-        return result;
-    }
-}
+vector<T, M> mul(vector<T, N> left, matrix<T, N, M> right);
 
 // matrix-vector
 __generic<T : __BuiltinFloatingPointType, let N : int, let M : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-vector<T,N> mul(matrix<T,N,M> left, vector<T,M> right)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "($1 * $0)";
-    case metal: __intrinsic_asm "($1 * $0)";
-    case hlsl: __intrinsic_asm "mul";
-    case spirv: return spirv_asm {
-        OpVectorTimesMatrix $$vector<T,N> result $right $left
-    };
-    default:
-        vector<T,N> result;
-        for( int i = 0; i < N; ++i )
-        {
-            T sum = T(0);
-            for( int j = 0; j < M; ++j )
-            {
-                sum += left[i][j] * right[j];
-            }
-            result[i] = sum;
-        }
-        return result;
-    }
-}
+vector<T, N> mul(matrix<T, N, M> left, vector<T, M> right);
+
 __generic<T : __BuiltinIntegerType, let N : int, let M : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-vector<T,N> mul(matrix<T,N,M> left, vector<T,M> right)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "($1 * $0)";
-    case metal: __intrinsic_asm "($1 * $0)";
-    case hlsl: __intrinsic_asm "mul";
-    default:
-        vector<T,N> result;
-        for( int i = 0; i < N; ++i )
-        {
-            T sum = T(0);
-            for( int j = 0; j < M; ++j )
-            {
-                sum += left[i][j] * right[j];
-            }
-            result[i] = sum;
-        }
-        return result;
-    }
-}
+vector<T, N> mul(matrix<T, N, M> left, vector<T, M> right);
+
 __generic<T : __BuiltinLogicalType, let N : int, let M : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [OverloadRank(-1)]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-vector<T,N> mul(matrix<T,N,M> left, vector<T,M> right)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "($1 * $0)";
-    case metal: __intrinsic_asm "($1 * $0)";
-    case hlsl: __intrinsic_asm "mul";
-    default:
-        vector<T,N> result;
-        for( int i = 0; i < N; ++i )
-        {
-            T sum = T(0);
-            for( int j = 0; j < M; ++j )
-            {
-                sum |= left[i][j] & right[j];
-            }
-            result[i] = sum;
-        }
-        return result;
-    }
-}
+vector<T, N> mul(matrix<T, N, M> left, vector<T, M> right);
 
 // matrix-matrix
 __generic<T : __BuiltinFloatingPointType, let R : int, let N : int, let C : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-matrix<T,R,C> mul(matrix<T,R,N> left, matrix<T,N,C> right)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "($1 * $0)";
-    case metal: __intrinsic_asm "($1 * $0)";
-    case hlsl: __intrinsic_asm "mul";
-    case spirv: return spirv_asm {
-        OpMatrixTimesMatrix $$matrix<T,R,C> result $right $left
-    };
-    default:
-        matrix<T,R,C> result;
-        for( int r = 0; r < R; ++r)
-        for( int c = 0; c < C; ++c)
-        {
-            T sum = T(0);
-            for( int i = 0; i < N; ++i )
-            {
-                sum += left[r][i] * right[i][c];
-            }
-            result[r][c] = sum;
-        }
-        return result;
-    }
-}
+matrix<T, R, C> mul(matrix<T, R, N> left, matrix<T, N, C> right);
+
 __generic<T : __BuiltinIntegerType, let R : int, let N : int, let C : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-matrix<T,R,C> mul(matrix<T,R,N> left, matrix<T,N,C> right)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "($1 * $0)";
-    case metal: __intrinsic_asm "($1 * $0)";
-    case hlsl: __intrinsic_asm "mul";
-    default:
-        matrix<T,R,C> result;
-        for( int r = 0; r < R; ++r)
-        for( int c = 0; c < C; ++c)
-        {
-            T sum = T(0);
-            for( int i = 0; i < N; ++i )
-            {
-                sum += left[r][i] * right[i][c];
-            }
-            result[r][c] = sum;
-        }
-        return result;
-    }
-}
+matrix<T, R, C> mul(matrix<T, R, N> left, matrix<T, N, C> right);
+
 __generic<T : __BuiltinLogicalType, let R : int, let N : int, let C : int>
+__intrinsic_op($(kIROp_ExplicitMul))
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
-matrix<T,R,C> mul(matrix<T,R,N> left, matrix<T,N,C> right)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "($1 * $0)";
-    case metal: __intrinsic_asm "($1 * $0)";
-    case hlsl: __intrinsic_asm "mul";
-    default:
-        matrix<T,R,C> result;
-        for( int r = 0; r < R; ++r)
-        for( int c = 0; c < C; ++c)
-        {
-            T sum = T(0);
-            for( int i = 0; i < N; ++i )
-            {
-                sum |= left[r][i] & right[i][c];
-            }
-            result[r][c] = sum;
-        }
-        return result;
-    }
-}
+matrix<T, R, C> mul(matrix<T, R, N> left, matrix<T, N, C> right);
 
 // next-after: next representable floating-point value
 // after x in the direction of y
@@ -12619,68 +12429,25 @@ vector<T,N> tanpi(vector<T,N> x)
 // Matrix transpose
 __generic<T : __BuiltinFloatingPointType, let N : int, let M : int>
 [__readNone]
-[require(cpp_cuda_glsl_hlsl_spirv, sm_4_0_version)]
+[require(cpp_cuda_glsl_hlsl_metal_spirv, sm_4_0_version)]
 [PreferRecompute]
-matrix<T, M, N> transpose(matrix<T, N, M> x)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "transpose";
-    case hlsl: __intrinsic_asm "transpose";
-    case spirv: return spirv_asm {
-        OpTranspose $$matrix<T, M, N> result $x
-    };
-    default:
-        matrix<T,M,N> result;
-        for(int r = 0; r < M; ++r)
-            for(int c = 0; c < N; ++c)
-                result[r][c] = x[c][r];
-        return result;
-    }
-}
+__intrinsic_op($(kIROp_Transpose))
+matrix<T, M, N> transpose(matrix<T, N, M> x);
+
 __generic<T : __BuiltinIntegerType, let N : int, let M : int>
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_spirv, sm_4_0_version)]
 [PreferRecompute]
-matrix<T, M, N> transpose(matrix<T, N, M> x)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "transpose";
-    case hlsl: __intrinsic_asm "transpose";
-    case spirv: return spirv_asm {
-        OpTranspose $$matrix<T, M, N> result $x
-    };
-    default:
-        matrix<T, M, N> result;
-        for (int r = 0; r < M; ++r)
-            for (int c = 0; c < N; ++c)
-                result[r][c] = x[c][r];
-        return result;
-    }
-}
+__intrinsic_op($(kIROp_Transpose))
+matrix<T, M, N> transpose(matrix<T, N, M> x);
+
 __generic<T : __BuiltinLogicalType, let N : int, let M : int>
 [__readNone]
 [require(cpp_cuda_glsl_hlsl_spirv, sm_4_0_version)]
 [PreferRecompute]
 [OverloadRank(-1)]
-matrix<T, M, N> transpose(matrix<T, N, M> x)
-{
-    __target_switch
-    {
-    case glsl: __intrinsic_asm "transpose";
-    case hlsl: __intrinsic_asm "transpose";
-    case spirv: return spirv_asm {
-        OpTranspose $$matrix<T, M, N> result $x
-    };
-    default:
-        matrix<T, M, N> result;
-        for (int r = 0; r < M; ++r)
-            for (int c = 0; c < N; ++c)
-                result[r][c] = x[c][r];
-        return result;
-    }
-}
+__intrinsic_op($(kIROp_Transpose))
+matrix<T, M, N> transpose(matrix<T, N, M> x);
 
 // Truncate to integer
 __generic<T : __BuiltinFloatingPointType>

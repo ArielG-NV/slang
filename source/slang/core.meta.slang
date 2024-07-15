@@ -1088,9 +1088,27 @@ struct matrix : IArray<vector<T,C>>
 
     /// Initialize a vector from a value of the same type
     // TODO: we should revise semantic checking so this kind of "identity" conversion is not required
-    __intrinsic_op(0)
+    //__intrinsic_op(0)
+    //[TreatAsDifferentiable]
+    //__init(This value);
+
+    __generic<let L2 : int>
+    __intrinsic_op($(kIROp_CastMatrixToMatrix))
+    __implicit_conversion($(kConversionCost_CastMatrixToMatrix))
+    [TreatAsDifferentiable]
+    [__unsafeForceInlineEarly]
+    __init(matrix<T, C, R, L2> value);
+
+    __intrinsic_op($(kIROp_CastMatrixToMatrix))
     [TreatAsDifferentiable]
     __init(This value);
+    
+    //__generic<let L2 : int = kColumnMajorMatrixLayout>
+    //__intrinsic_op($(kIROp_CastMatrixToMatrix))
+    //__implicit_conversion($(kConversionCost_CastMatrixToMatrix))
+    //[TreatAsDifferentiable]
+    //__init(matrix<T, C, R, L2> value);
+
 
     [ForceInline]
     int getCount() { return R; }

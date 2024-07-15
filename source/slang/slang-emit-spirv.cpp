@@ -2737,6 +2737,12 @@ struct SPIRVEmitContext
                 inst->getOperand(0)
             );
             break;
+        case kIROp_ExplicitMul:
+            emitExplicitMulArithmetic(parent, inst);
+            break;
+        case kIROp_Transpose:
+            result = emitInst(parent, inst, SpvOpTranspose, inst->getFullType(), kResultID, OperandsOf(inst));
+            break;
         case kIROp_Add:
         case kIROp_Sub:
         case kIROp_Mul:
@@ -5609,7 +5615,7 @@ struct SPIRVEmitContext
             const auto lVec = as<IRVectorType>(l->getDataType());
             auto r = operands[1];
             const auto rVec = as<IRVectorType>(r->getDataType());
-            if (op == kIROp_Mul && isFloatingPoint)
+            if ((op == kIROp_Mul) && isFloatingPoint)
             {
                 if (lVec && !rVec)
                 {
@@ -5641,6 +5647,120 @@ struct SPIRVEmitContext
         SLANG_UNREACHABLE("Arithmetic op with 0 or more than 2 operands");
     }
 
+    struct ExplicitMulInfo
+    {
+        enum class ContainerType
+        {
+            Unknown = 0,
+            Vector = 1,
+            Matrix = 2,
+        };
+
+        enum class ElementType
+        {
+            Unknown = 0,
+            FloatType = 1,
+            UIntType = 2,
+            IntType = 3,
+        };
+
+        ContainerType containerType;
+        ElementType elementType;
+    };
+    ExplicitMulInfo::ElementType getExplicitMultiplyElementType(IRBuilder& builder, IRType* type)
+    {
+        if (type == builder.getType(kIROp_FloatType) || type == builder.getType(kIROp_HalfType) || type == builder.getType(kIROp_DoubleType))
+            return ExplicitMulInfo::ElementType::FloatType;
+        if (type == builder.getType(kIROp_UIntType) || type == builder.getType(kIROp_UInt8Type) 
+            || type == builder.getType(kIROp_UInt16Type) || type == builder.getType(kIROp_UInt64Type))
+            return ExplicitMulInfo::ElementType::UIntType;
+        if (type == builder.getType(kIROp_IntType) || type == builder.getType(kIROp_Int8Type) 
+            || type == builder.getType(kIROp_Int16Type) || type == builder.getType(kIROp_Int64Type))
+            return ExplicitMulInfo::ElementType::IntType;
+        return ExplicitMulInfo::ElementType::Unknown;
+    }
+    ExplicitMulInfo getInfoForExplicitMultiply(IRBuilder& builder, IRInst* inst)
+    {
+        if (auto vecType = as<IRVectorType>(inst))
+        {
+            return { ExplicitMulInfo::ContainerType::Vector, getExplicitMultiplyElementType(builder, vecType->getElementType()) };
+        }
+        else if (auto matType = as<IRMatrixType>(inst))
+        {
+            return { ExplicitMulInfo::ContainerType::Matrix, getExplicitMultiplyElementType(builder, matType->getElementType()) };
+        }
+        return { ExplicitMulInfo::ContainerType::Unknown, ExplicitMulInfo::ElementType::Unknown };
+    }
+
+    SpvInst* emitExplicitMulArithmetic(SpvInstParent* parent, IRInst* inst)
+    {
+        IRBuilder builder(m_irModule);
+
+        auto op0 = inst->getOperand(0);
+        auto op1 = inst->getOperand(1);
+        
+        ExplicitMulInfo op0Type = getInfoForExplicitMultiply(builder, op0->getDataType());
+        ExplicitMulInfo op1Type = getInfoForExplicitMultiply(builder, op1->getDataType());
+
+        // We can assume the elementTypes of op0 and op1 are the same, Slang already does validation on these in the Frontend
+        SLANG_ASSERT(op0Type.containerType != ExplicitMulInfo::ContainerType::Unknown || op1Type.containerType != ExplicitMulInfo::ContainerType::Unknown);
+        SLANG_ASSERT(op0Type.elementType != ExplicitMulInfo::ElementType::Unknown || op1Type.elementType != ExplicitMulInfo::ElementType::Unknown);
+
+        if (op0Type.containerType == ExplicitMulInfo::ContainerType::Vector && op1Type.containerType == ExplicitMulInfo::ContainerType::Vector)
+        {
+            if (op0Type.elementType == ExplicitMulInfo::ElementType::FloatType)
+            {
+                return emitInst(parent, inst, SpvOpDot, inst->getFullType(), kResultID, OperandsOf(inst));
+            }
+            if (op0Type.elementType == ExplicitMulInfo::ElementType::UIntType)
+            {
+                //TODO: if spirv 1.6 is enabled run MulExplicit, else run a fallback
+                requireSPIRVCapability(SpvCapabilityDotProduct);
+                return emitInst(parent, inst, SpvOpUDot, inst->getFullType(), kResultID, OperandsOf(inst));
+            }
+            if (op0Type.elementType == ExplicitMulInfo::ElementType::IntType)
+            {
+                //TODO: if spirv 1.6 is enabled run MulExplicit, else run a fallback
+                requireSPIRVCapability(SpvCapabilityDotProduct);
+                return emitInst(parent, inst, SpvOpSDot, inst->getFullType(), kResultID, OperandsOf(inst));
+            }
+        }
+        else if (op0Type.containerType == ExplicitMulInfo::ContainerType::Vector && op1Type.containerType == ExplicitMulInfo::ContainerType::Matrix)
+        {
+            // Slang does not currently support Int/UInt matrix operations
+            SLANG_ASSERT(op0Type.elementType != ExplicitMulInfo::ElementType::UIntType
+                        || op0Type.elementType != ExplicitMulInfo::ElementType::IntType);
+            if (op0Type.elementType == ExplicitMulInfo::ElementType::FloatType)
+            {
+                requireSPIRVCapability(SpvCapabilityMatrix);
+                return emitInst(parent, inst, SpvOpMatrixTimesVector, inst->getFullType(), kResultID, op1, op0);
+            }
+        }
+        else if (op0Type.containerType == ExplicitMulInfo::ContainerType::Matrix && op1Type.containerType == ExplicitMulInfo::ContainerType::Vector)
+        {
+            // Slang does not currently support Int/UInt matrix operations
+            SLANG_ASSERT(op0Type.elementType != ExplicitMulInfo::ElementType::UIntType
+                        || op0Type.elementType != ExplicitMulInfo::ElementType::IntType);
+            if (op0Type.elementType == ExplicitMulInfo::ElementType::FloatType)
+            {
+                requireSPIRVCapability(SpvCapabilityMatrix);
+                return emitInst(parent, inst, SpvOpVectorTimesMatrix, inst->getFullType(), kResultID, op1, op0);
+            }
+        }
+        else if (op0Type.containerType == ExplicitMulInfo::ContainerType::Matrix && op1Type.containerType == ExplicitMulInfo::ContainerType::Matrix)
+        {
+            // Slang does not currently support Int/UInt matrix operations
+            SLANG_ASSERT(op0Type.elementType != ExplicitMulInfo::ElementType::UIntType
+                        || op0Type.elementType != ExplicitMulInfo::ElementType::IntType);
+            if (op0Type.elementType == ExplicitMulInfo::ElementType::FloatType)
+            {
+                requireSPIRVCapability(SpvCapabilityMatrix);
+                return emitInst(parent, inst, SpvOpMatrixTimesMatrix, inst->getFullType(), kResultID, op1, op0);
+            }
+        }
+        m_sink->diagnose(inst, Diagnostics::unimplemented, "unknown how to handle kIROp_ExplicitMul types");
+        return nullptr;
+    }
 
     SpvInst* emitArithmetic(SpvInstParent* parent, IRInst* inst)
     {

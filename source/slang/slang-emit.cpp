@@ -40,6 +40,7 @@
 #include "slang-ir-user-type-hint.h"
 #include "slang-ir-lower-append-consume-structured-buffer.h"
 #include "slang-ir-lower-binding-query.h"
+#include "slang-ir-lower-column-major-matrix.h"
 #include "slang-ir-lower-generics.h"
 #include "slang-ir-lower-glsl-ssbo-types.h"
 #include "slang-ir-lower-tuple-types.h"
@@ -1279,6 +1280,11 @@ Result linkAndOptimizeIR(
             invertYOfPositionOutput(irModule);
         if (targetProgram->getOptionSet().getBoolOption(CompilerOptionName::VulkanUseDxPositionW))
             rcpWOfPositionInput(irModule);
+    }
+
+    if (isMetalTarget(targetRequest) || isCUDATarget(targetRequest) || isCPUTarget(targetRequest))
+    {
+        lowerColumnMajorMatrix(irModule, sink);
     }
 
     // Lower all bit_cast operations on complex types into leaf-level

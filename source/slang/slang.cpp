@@ -332,6 +332,8 @@ SlangResult Session::compileStdLib(slang::CompileStdLibFlags compileFlags)
         << (const char*)getAutodiffLibraryCode()->getBufferPointer();
     auto stdLibSrcBlob = StringBlob::moveCreate(stdLibSrcBuilder.produceString());
     addBuiltinSource(coreLanguageScope, "core", stdLibSrcBlob);
+    printf("%s\n", stdLibSrcBlob.get()->getBufferPointer());
+
 
     if (compileFlags & slang::CompileStdLibFlag::WriteDocumentation)
     {

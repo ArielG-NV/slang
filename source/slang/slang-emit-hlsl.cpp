@@ -750,7 +750,27 @@ bool HLSLSourceEmitter::tryEmitInstExprImpl(IRInst* inst, const EmitOpInfo& inOu
             return true;
         }
         break;
+        case kIROp_ExplicitMul:
+        {
+            auto outerPrec = inOuterPrec;
+            const auto emitOp = getEmitOpForOp(inst->getOp());
+            const auto info = getInfo(emitOp);
 
+            m_writer->emit("mul(");
+            emitOperand(inst->getOperand(0), leftSide(outerPrec, info));    
+            m_writer->emit(", ");                                                          
+            emitOperand(inst->getOperand(1), rightSide(outerPrec, info));
+            m_writer->emit(")");
+
+            return true;
+        }
+        case kIROp_Transpose:
+        {
+            m_writer->emit("transpose(");
+            emitOperand(inst->getOperand(0), getInfo(EmitOp::General));
+            m_writer->emit(")");
+            return true;   
+        }
         default: break;
     }
     // Not handled

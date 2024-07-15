@@ -1426,13 +1426,14 @@ struct DiffTransposePass
         // Dispatch logic.
         switch(fwdInst->getOp())
         {
+            case kIROp_ExplicitMul:
             case kIROp_Add:
             case kIROp_Mul:
             case kIROp_Sub: 
             case kIROp_Div: 
             case kIROp_Neg:
                 return transposeArithmetic(builder, fwdInst, revValue);
-            
+
             case kIROp_Select:
                 return transposeSelect(builder, fwdInst, revValue);
 
@@ -2347,6 +2348,35 @@ struct DiffTransposePass
                                 builder->emitNeg(
                                     revValue->getDataType(), revValue),
                                 fwdInst)));
+            }
+            case kIROp_ExplicitMul:
+            {
+                // We need to have 2 possible outputs,
+                // differatiation with respect to A or B.
+                if (isDifferentialInst(fwdInst->getOperand(0)))
+                {
+                    // (Out = dA * B) -> (dA += B * dOut)
+                    return TranspositionResult(
+                        List<RevGradient>(
+                            RevGradient(
+                                fwdInst->getOperand(0),
+                                builder->emitMul(operandType, fwdInst->getOperand(1), revValue),
+                                fwdInst)));
+                }
+                else if (isDifferentialInst(fwdInst->getOperand(1)))
+                {
+                    // (Out = A * dB) -> (dB += A * dOut)
+                    return TranspositionResult(
+                        List<RevGradient>(
+                            RevGradient(
+                                fwdInst->getOperand(1),
+                                builder->emitMul(operandType, fwdInst->getOperand(0), revValue),
+                                fwdInst)));
+                }
+                else
+                {
+                    SLANG_ASSERT_FAILURE("Neither operand of a mul instruction is a differential inst");
+                }
             }
             case kIROp_Mul: 
             {

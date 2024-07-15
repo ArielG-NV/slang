@@ -4857,6 +4857,19 @@ namespace Slang
         return inst;
     }
 
+    IRInst* IRBuilder::emitTranspose(
+        IRInst* inst)
+    {
+        inst = createInst<IRTranspose>(
+            this,
+            kIROp_Transpose,
+            inst->getDataType(),
+            inst);
+
+        addInst(inst);
+        return inst;
+    }
+
     IRInst* IRBuilder::emitIsType(IRInst* value, IRInst* witness, IRInst* typeOperand, IRInst* targetWitness)
     {
         IRInst* args[] = { value, witness, typeOperand, targetWitness };
@@ -8167,6 +8180,7 @@ namespace Slang
         case kIROp_swizzleSet:  // Doesn't actually "set" anything - just returns the resulting vector
         case kIROp_Add:
         case kIROp_Sub:
+        case kIROp_ExplicitMul:
         case kIROp_Mul:
         case kIROp_Lsh:
         case kIROp_Rsh:
@@ -8595,6 +8609,7 @@ namespace Slang
         {
         case kIROp_Add:
         case kIROp_Sub:
+        case kIROp_ExplicitMul:
         case kIROp_Mul:
         case kIROp_FRem:
         case kIROp_IRem:

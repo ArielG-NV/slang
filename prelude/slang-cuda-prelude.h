@@ -207,6 +207,12 @@ union Union64
     double d;
 };
 
+template<typename T>
+SLANG_FORCE_INLINE SLANG_CUDA_CALL float make_float(T val)
+{
+    return (float)val;
+}
+
 SLANG_FORCE_INLINE SLANG_CUDA_CALL float _slang_fmod(float x, float y)
 {
     return ::fmodf(x, y);
@@ -782,6 +788,9 @@ SLANG_FORCE_INLINE SLANG_CUDA_CALL T _slang_select(bool condition, T v0, T v1)
 {
     return condition ? v0 : v1;
 }
+
+// Shared functionality
+#include "slang-cpp-cuda-shared.h"
 
 //
 // Half support

@@ -1723,6 +1723,7 @@ struct SPIRVLegalizationContext : public SourceEmitterBase
             {
             case kIROp_Add:
             case kIROp_Sub:
+            case kIROp_ExplicitMul:
             case kIROp_Mul:
             case kIROp_FRem:
             case kIROp_IRem:

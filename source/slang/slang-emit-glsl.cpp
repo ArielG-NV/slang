@@ -1747,13 +1747,33 @@ bool GLSLSourceEmitter::tryEmitInstExprImpl(IRInst* inst, const EmitOpInfo& inOu
             // Handled
             return true;
         }
+        case kIROp_ExplicitMul:
+        {
+            if(as<IRVectorType>(inst->getOperand(0)->getDataType()) 
+                && as<IRVectorType>(inst->getOperand(1)->getDataType()))
+            {
+                m_writer->emit("dot(");
+                emitOperand(inst->getOperand(0), getInfo(EmitOp::General));
+                m_writer->emit(", ");
+                emitOperand(inst->getOperand(1), getInfo(EmitOp::General));
+                m_writer->emit(")");
+                return true;
+            }
+        }
+        case kIROp_Transpose:
+        {
+            m_writer->emit("transpose(");
+            emitOperand(inst->getOperand(0), getInfo(EmitOp::General));
+            m_writer->emit(")");
+            return true;   
+        }
         case kIROp_Mul:
         {
             // Component-wise multiplication needs to be special cased,
             // because GLSL uses infix `*` to express inner product
             // when working with matrices.
 
-            // Are we targetting GLSL, and are both operands matrices?
+            // Are both operands matrices?
             if (as<IRMatrixType>(inst->getOperand(0)->getDataType())
                 && as<IRMatrixType>(inst->getOperand(1)->getDataType()))
             {

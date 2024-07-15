@@ -2366,6 +2366,7 @@ void CLikeSourceEmitter::defaultEmitInstExpr(IRInst* inst, const EmitOpInfo& inO
     case kIROp_BitAnd:
     case kIROp_And:
     case kIROp_Or:
+    case kIROp_ExplicitMul:
     case kIROp_Mul:
     {
         const auto emitOp = getEmitOpForOp(inst->getOp());
