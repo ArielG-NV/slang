@@ -1,5 +1,6 @@
 #include "slang-ir-redundancy-removal.h"
 #include "slang-ir-dominators.h"
+#include "slang-ir-call-graph.h"
 #include "slang-ir-util.h"
 
 namespace Slang
@@ -145,36 +146,148 @@ bool removeRedundancyInFunc(IRGlobalValueWithCode* func)
     return result;
 }
 
+static bool  _isIndirectRootVar(IRInst* inst)
+{
+    switch (inst->getOp())
+    {
+    case kIROp_FieldAddress:
+    case kIROp_GetElementPtr:
+        return true;
+    default:
+        return false;
+    }
+}
 static IRInst* _getRootVar(IRInst* inst)
 {
     while (inst)
     {
-        switch (inst->getOp())
-        {
-        case kIROp_FieldAddress:
-        case kIROp_GetElementPtr:
+        if (_isIndirectRootVar(inst))
             inst = inst->getOperand(0);
-            break;
-        default:
+        else
             return inst;
-        }
     }
     return inst;
 }
 
+const HashSet<IRFunc*>& getReferencedEntryPointsOfInst(IRInst* inst, IRModule* module)
+{
+    // Op in global scope is in all entry-points
+    auto parentFunc = getParentFunc(inst);
+    if (!parentFunc)
+        return module->getEntryPoints();
+    else
+    {
+        // Compiler introduced (specialized?) function, may need to rebuild ref-graph
+        auto referencedEntryPoints = module->getMaximalEntryPointReferenceGraph().tryGetValue(parentFunc);
+        if (!referencedEntryPoints)
+            return {};
+        return *referencedEntryPoints;
+    }
+}
+
+bool tryRemoveRedundantStoreIntoGlobal(IRGlobalValueWithCode* func, IRStore* store)
+{
+    // A 'storeInst' has 2 parameters, 'src' and 'dst'. If 'src' is sideeffect-free
+    // then to determine if 'storeInst' is live we need to analyze the 'dst' we are storing into.
+    // If the 'dst' is 'unused' we can then drop this 'storeInst'.
+    // 'dst' is 'unused' if: 1. 'dst' is not global memory 2. we only use 'dst' for Store's within the same referenced entry-points as 'storeInst'.
+    // This logic needs to watchout for a call-graph that may call a function which modifies a global across 2+ entry-points.
+    //
+    // As a result of these rules, we only optimize 'main1'.
+    /*
+    static int globalVar;
+
+    void main1()
+    {
+        globalVar = 2;
+    }
+
+    void main2()
+    {
+        globalVar = 1;
+        int var = globalVar;
+    }
+    */
+    auto storeInstModule = store->getModule();
+    if (!storeInstModule)
+        return false;
+
+    // 'src' cannot have a side effect if Store is to be removed.
+    if (store->getVal()->mightHaveSideEffects())
+        return false;
+
+    // 'dst' does not impact device memory
+    auto dstInst = _getRootVar(store->getPtr());
+    if (instAffectsDeviceMemory(dstInst))
+        return false;
+
+    auto storeInstReferencedEntryPoints = getReferencedEntryPointsOfInst(store, storeInstModule);
+    auto moduleEntryPointRefGraph = storeInstModule->getMaximalEntryPointReferenceGraph();
+    auto moduleEntryPoints = storeInstModule->getEntryPoints();
+
+    List<IRUse*> workList;
+    for (auto use = dstInst->firstUse; use; use = use->nextUse)
+    {
+        auto user = use->getUser();
+        //TODO: get indirect root var uses
+        if (_isIndirectRootVar(user))
+        {
+            for (auto useOfRoot = user->firstUse; useOfRoot; useOfRoot = useOfRoot->nextUse)
+                workList.add(useOfRoot);
+        }
+        else
+            workList.add(use);
+    }
+    for(auto use : workList)
+    {
+        auto user = use->getUser();
+
+        // Trivial case.
+        if (user == store)
+            continue;
+
+        // DebugInst mean we are in a debug-mode of sorts, end here.
+        if (isDebugInst(user))
+            return false;
+
+        // Inst is a store where 'dst' is the destination, end here.
+        if (isInstTheDstOfStore(use->usedValue, user))
+            continue;
+
+        auto refGraphOfInst = getReferencedEntryPointsOfInst(user, storeInstModule);
+        // 0 entry point references, 'dst' is unused.
+        if (refGraphOfInst.getCount() == 0)
+            continue;
+
+        for (auto entryPoint : storeInstReferencedEntryPoints)
+            if (refGraphOfInst.contains(entryPoint))
+                // found shared entry point which was not a Store, we can end here.
+                return false;
+    }
+
+    store->removeAndDeallocate();
+    return true;
+}
+
 bool tryRemoveRedundantStore(IRGlobalValueWithCode* func, IRStore* store)
 {
+    // If 'src' has a side effect, do not optimize out
+    if (store->getVal()->mightHaveSideEffects())
+        return false;
+
+    // Stores to global variables can be removed in rare cases, these are checked for.
+    auto rootVar = _getRootVar(store->getPtr());
+    if (!isChildInstOf(rootVar, func))
+    {
+        return tryRemoveRedundantStoreIntoGlobal(func, store);
+    }
+
     // We perform a quick and conservative check:
     // A store is redundant if it is followed by another store to the same address in
     // the same basic block, and there are no instructions that may use any addresses
     // related to this address.
     bool hasAddrUse = false;
     bool hasOverridingStore = false;
-
-    // Stores to global variables will never get removed.
-    auto rootVar = _getRootVar(store->getPtr());
-    if (!isChildInstOf(rootVar, func))
-        return false;
 
     // A store can be removed if it stores into a local variable
     // that has no other uses than store.
@@ -219,7 +332,6 @@ bool tryRemoveRedundantStore(IRGlobalValueWithCode* func, IRStore* store)
             return true;
         }
     }
-
     // A store can be removed if there are subsequent stores to the same variable,
     // and there are no insts in between the stores that can read the variable.
 

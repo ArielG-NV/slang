@@ -15911,6 +15911,7 @@ void AcceptHitAndEndSearch()
 
 // 10.4.1 - Ray Dispatch System Values
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_allstages)]
 uint3 DispatchRaysIndex()
@@ -15928,6 +15929,7 @@ uint3 DispatchRaysIndex()
     }
 }
 
+[__NoSideEffect]
 [require(cuda_glsl_hlsl_spirv, raytracing_allstages)]
 uint3 DispatchRaysDimensions()
 {
@@ -15946,6 +15948,7 @@ uint3 DispatchRaysDimensions()
 
 // 10.4.2 - Ray System Values
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection_miss)]
 float3 WorldRayOrigin()
@@ -15963,6 +15966,7 @@ float3 WorldRayOrigin()
     }
 }
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection_miss)]
 float3 WorldRayDirection()
@@ -15980,6 +15984,7 @@ float3 WorldRayDirection()
     }
 }
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection_miss)]
 float RayTMin()
@@ -16007,6 +16012,7 @@ float RayTMin()
 // we should simply provide two overloads here, specialized
 // to the appropriate Vulkan stages.
 //
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection_miss)]
 float RayTCurrent()
@@ -16024,6 +16030,7 @@ float RayTCurrent()
     }
 }
 
+[__NoSideEffect]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection_miss)]
 uint RayFlags()
 {
@@ -16042,6 +16049,7 @@ uint RayFlags()
 
 // 10.4.3 - Primitive/Object Space System Values
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection)]
 uint InstanceIndex()
@@ -16059,6 +16067,7 @@ uint InstanceIndex()
     }
 }
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection)]
 uint InstanceID()
@@ -16076,6 +16085,7 @@ uint InstanceID()
     }
 }
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection)]
 uint PrimitiveIndex()
@@ -16093,6 +16103,7 @@ uint PrimitiveIndex()
     }
 }
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection)]
 float3 ObjectRayOrigin()
@@ -16110,6 +16121,7 @@ float3 ObjectRayOrigin()
     }
 }
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection)]
 float3 ObjectRayDirection()
@@ -16129,6 +16141,7 @@ float3 ObjectRayDirection()
 
 // TODO: optix has an optixGetObjectToWorldTransformMatrix function that returns 12
 // floats by reference.
+[__NoSideEffect]
 [NonUniformReturn]
 [require(glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection)]
 float3x4 ObjectToWorld3x4()
@@ -16146,6 +16159,7 @@ float3x4 ObjectToWorld3x4()
     }
 }
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection)]
 float3x4 WorldToObject3x4()
@@ -16163,6 +16177,7 @@ float3x4 WorldToObject3x4()
     }
 }
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection)]
 float4x3 ObjectToWorld4x3()
@@ -16179,6 +16194,7 @@ float4x3 ObjectToWorld4x3()
     }
 }
 
+[__NoSideEffect]
 [NonUniformReturn]
 [require(glsl_hlsl_spirv, raytracing_anyhit_closesthit_intersection)]
 float4x3 WorldToObject4x3()
@@ -16201,6 +16217,7 @@ float4x3 WorldToObject4x3()
 
 __glsl_extension(GL_NV_ray_tracing_motion_blur)
 __glsl_extension(GL_EXT_ray_tracing)
+[__NoSideEffect]
 [NonUniformReturn]
 [require(glsl_hlsl_spirv, raytracing_motionblur_anyhit_closesthit_intersection_miss)]
 float RayCurrentTime()
@@ -16226,10 +16243,16 @@ float RayCurrentTime()
 // declarations, so that users can know they aren't coding
 // against the final spec?
 //
-[NonUniformReturn] float3x4 ObjectToWorld() { return ObjectToWorld3x4(); }
-[NonUniformReturn] float3x4 WorldToObject() { return WorldToObject3x4(); }
+[__NoSideEffect]
+[NonUniformReturn]
+float3x4 ObjectToWorld() { return ObjectToWorld3x4(); }
+
+[__NoSideEffect]
+[NonUniformReturn]
+float3x4 WorldToObject() { return WorldToObject3x4(); }
 
 // 10.4.4 - Hit Specific System values
+[__NoSideEffect]
 [NonUniformReturn]
 [require(cuda_glsl_hlsl_spirv, raytracing_anyhit_closesthit)]
 uint HitKind()
@@ -16256,14 +16279,17 @@ static const uint HIT_KIND_TRIANGLE_BACK_FACE   = 255;
 //
 
 // Treats `left` and `right` as 4-component vectors of `UInt8` and computes `dot(left, right) + acc`
+[__NoSideEffect]
 uint dot4add_u8packed(uint left, uint right, uint acc);
 
 // Treats `left` and `right` as 4-component vectors of `Int8` and computes `dot(left, right) + acc`
+[__NoSideEffect]
 int dot4add_i8packed(uint left, uint right, int acc);
 
 // Computes `dot(left, right) + acc`.
 //
 // May not produce infinities or NaNs for intermediate results that overflow the range of `half`
+[__NoSideEffect]
 float dot2add(float2 left, float2 right, float acc);
 
 //

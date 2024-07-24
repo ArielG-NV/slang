@@ -2591,7 +2591,8 @@ void legalizeIRForSPIRV(
     SLANG_UNUSED(entryPoints);
     legalizeSPIRV(context, module);
     simplifyIRForSpirvLegalization(context->m_targetProgram, codeGenContext->getSink(), module);
-    buildEntryPointReferenceGraph(context->m_referencingEntryPoints, module);
+    HashSet<IRFunc*> referencedEntryPoints;
+    buildEntryPointReferenceGraph(context->m_referencingEntryPoints, referencedEntryPoints, module);
     insertFragmentShaderInterlock(context, module);
 }
 

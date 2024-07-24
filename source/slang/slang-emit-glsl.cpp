@@ -29,7 +29,8 @@ GLSLSourceEmitter::GLSLSourceEmitter(const Desc& desc) :
 
 void GLSLSourceEmitter::beforeComputeEmitActions(IRModule* module)
 {
-    buildEntryPointReferenceGraph(this->m_referencingEntryPoints, module);
+    HashSet<IRFunc*> referencedEntryPoints;
+    buildEntryPointReferenceGraph(this->m_referencingEntryPoints, referencedEntryPoints, module);
 }
 
 SlangResult GLSLSourceEmitter::init()

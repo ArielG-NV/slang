@@ -7,6 +7,7 @@
 #include "../core/slang-writer.h"
 
 #include "slang-ir-dominators.h"
+#include "slang-ir-call-graph.h"
 
 #include "slang-mangle.h"
 
@@ -1482,6 +1483,19 @@ namespace Slang
         }
 
         return parent;
+    }
+
+    const Dictionary<IRInst*, HashSet<IRFunc*>>& IRModule::getMaximalEntryPointReferenceGraph()
+    {
+        if (m_maximalEntryPointReferenceGraph.getCount() == 0)
+            buildEntryPointReferenceGraph(m_maximalEntryPointReferenceGraph, m_entryPoints, this);
+        return m_maximalEntryPointReferenceGraph;
+    }
+    const HashSet<IRFunc*>& IRModule::getEntryPoints()
+    {
+        if (m_entryPoints.getCount() == 0)
+            buildEntryPointReferenceGraph(m_maximalEntryPointReferenceGraph, m_entryPoints, this);
+        return m_entryPoints;
     }
 
     IRInst* IRModule::_allocateInst(
@@ -8033,6 +8047,57 @@ namespace Slang
             decoration->removeFromParent();
             decoration->insertAtStart(target);
         }
+    }
+
+    bool isDebugInst(IRInst* inst)
+    {
+        switch (inst->getOp())
+        {
+        case kIROp_DebugSource:
+        case kIROp_DebugLine:
+        case kIROp_DebugVar:
+        case kIROp_DebugValue:
+        case kIROp_DebugLocationDecoration:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    bool isInstTheDstOfStore(IRInst* inst, IRInst* storeInst)
+    {
+        switch (storeInst->getOp())
+        {
+        case kIROp_Store:
+            {
+                if (as<IRStore>(storeInst)->getPtr() == inst)
+                    return true;
+                return false;
+            }
+        default:
+            return false;
+        }
+    }
+
+    bool instAffectsDeviceMemory(IRInst* inst)
+    {
+        if(isResourceType(inst->getDataType()))
+            return true;
+
+        // TODO: cover all positives rather than negatives
+        for (auto i : inst->getDecorations())
+        {
+            switch (i->getOp())
+            {
+            case kIROp_NameHintDecoration:
+            case kIROp_ExportDecoration:
+            case kIROp_KeepAliveDecoration:
+                continue;
+            default: 
+                return true;
+            }
+        }
+        return false;
     }
 
     bool IRInst::mightHaveSideEffects(SideEffectAnalysisOptions options)

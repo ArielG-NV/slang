@@ -119,6 +119,7 @@ struct DeadCodeEliminationContext
             // processing entries off of our work list
             // until it goes dry.
             //
+
             while (workList.getCount())
             {
                 auto inst = workList.getLast();

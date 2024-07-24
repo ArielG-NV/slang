@@ -5,7 +5,7 @@
 namespace Slang
 {
 
-void buildEntryPointReferenceGraph(Dictionary<IRInst*, HashSet<IRFunc*>>& referencingEntryPoints, IRModule* module)
+void buildEntryPointReferenceGraph(Dictionary<IRInst*, HashSet<IRFunc*>>& referencingEntryPoints, HashSet<IRFunc*>& foundEntryPoints, IRModule* module)
 {
     struct WorkItem
     {
@@ -94,7 +94,9 @@ void buildEntryPointReferenceGraph(Dictionary<IRInst*, HashSet<IRFunc*>>& refere
     {
         if (globalInst->getOp() == kIROp_Func && globalInst->findDecoration<IREntryPointDecoration>())
         {
-            visit(as<IRFunc>(globalInst), globalInst);
+            auto func = as<IRFunc>(globalInst);
+            foundEntryPoints.add(func);
+            visit(func, globalInst);
         }
     }
     for (Index i = 0; i < workList.getCount(); i++)

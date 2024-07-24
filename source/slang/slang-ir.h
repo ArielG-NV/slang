@@ -1815,6 +1815,10 @@ struct IRHitObjectType : IRType
 bool isDefinition(
     IRInst* inVal);
 
+bool isDebugInst(IRInst* inst);
+bool isInstTheDstOfStore(IRInst* inst, IRInst* storeInst);
+bool instAffectsDeviceMemory(IRInst* inst);
+
 // A structure type is represented as a parent instruction,
 // where the child instructions represent the fields of the
 // struct.
@@ -2310,6 +2314,9 @@ public:
     void invalidateAnalysisForInst(IRGlobalValueWithCode* func) { m_mapInstToAnalysis.remove(func); }
     void invalidateAllAnalysis() { m_mapInstToAnalysis.clear(); }
 
+    const Dictionary<IRInst*, HashSet<IRFunc*>>& getMaximalEntryPointReferenceGraph();
+    const HashSet<IRFunc*>& getEntryPoints();
+
     IRInstListBase getGlobalInsts() const { return getModuleInst()->getChildren(); }
 
         /// Create an empty instruction with the `op` opcode and space for
@@ -2388,6 +2395,14 @@ private:
 
     Dictionary<IRInst*, IRAnalysis> m_mapInstToAnalysis;
 
+    // We sometimes need to know 'the worst case' of a inst in a entry-point-reference-graph,
+    // this means that we need to know the maximal number of entry-points an inst can reference.
+    // To track this efficently we only build an entry-point-reference-graph once at the start.
+    // This may mean certain functions lack a reference-graph which is OK in some senarios where
+    // we can ensure the compiler won't create a function dynamically which we need to identify 
+    // in the reference graph.
+    Dictionary<IRInst*, HashSet<IRFunc*>> m_maximalEntryPointReferenceGraph;
+    HashSet<IRFunc*> m_entryPoints;
 };
 
 

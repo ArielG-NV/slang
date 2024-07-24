@@ -14,17 +14,15 @@ namespace Slang
         void processModule(IRModule* module)
         {
             Dictionary<IRInst*, HashSet<IRFunc*>> referencingEntryPoints;
-            buildEntryPointReferenceGraph(referencingEntryPoints, module);
+            HashSet<IRFunc*> entryPoints;
+            buildEntryPointReferenceGraph(referencingEntryPoints, entryPoints, module);
 
-            List<IRInst*> entryPoints;
             // Traverse the module to find all entry points.
             // If we see a `GetWorkGroupSize` instruction, we will materialize it.
             // 
             for (auto inst : module->getGlobalInsts())
             {
-                if (inst->getOp() == kIROp_Func && inst->findDecoration<IREntryPointDecoration>())
-                    entryPoints.add(inst);
-                else if (inst->getOp() == kIROp_GetWorkGroupSize)
+                if (inst->getOp() == kIROp_GetWorkGroupSize)
                     materializeGetWorkGroupSize(module, referencingEntryPoints, inst);
             }
 
