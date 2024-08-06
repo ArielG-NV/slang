@@ -34,8 +34,6 @@ bool equals(matrix<T, N, M> lhs, matrix<T, N, M> rhs)
     return true;
 }
 
-rayQueryEXT
-
 bool testAbortRayTrace() {
     rayQueryEXT q;
     rayQueryInitializeEXT(q, scene, gl_RayFlagsNoneEXT, 0xff, vec3(0.1, 0.1, 0.0), 0.01f, vec3(0, 0, 1), 1e4f);
