@@ -4562,6 +4562,7 @@ struct ExprLoweringVisitorBase : public ExprVisitor<Derived, LoweredValInfo>
                 {
                     if (auto baseStructType = findBaseStructType(getASTBuilder(), structTypeDeclRef))
                     {
+                        auto declRef = findBaseStructDeclRef(getASTBuilder(), structTypeDeclRef);
                         UInt argIndex = argCounter++;
                         if (argIndex < argCount)
                         {
@@ -7284,8 +7285,10 @@ struct DeclLoweringVisitor : DeclVisitor<DeclLoweringVisitor, LoweredValInfo>
 
     LoweredValInfo visitExtensionDecl(ExtensionDecl* decl)
     {
-        for (auto & member : decl->members)
+        for (auto& member : decl->members)
+        {
             ensureDecl(context, member);
+        }
         return LoweredValInfo();
     }
 
@@ -10771,6 +10774,8 @@ RefPtr<IRModule> generateIRForTranslationUnit(
     // been emitted.
     for (auto decl : translationUnit->getModuleDecl()->members)
     {
+        //if (decl->getName() && decl->getName()->text.equals("__TextureMips"))
+        //    __debugbreak();
         ensureAllDeclsRec(context, decl);
     }
 

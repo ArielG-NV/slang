@@ -426,50 +426,164 @@ namespace Slang
             auto toTypeDeclRef = toDeclRefType->getDeclRef();
             if(auto toStructDeclRef = toTypeDeclRef.as<StructDecl>())
             {
+                auto toStructDecl = toStructDeclRef.getDecl();
+                
                 // Trying to initialize a `struct` type given an initializer list.
                 //
                 // Before we iterate over the fields, we want to check if this struct
                 // inherits from another `struct` type. If so, we want to read
                 // an initializer for that base type first.
                 //
-                if (auto baseStructType = findBaseStructType(m_astBuilder, toStructDeclRef))
+                //if (auto baseStructType = findBaseStructType(m_astBuilder, toStructDeclRef))
+                //{
+                //    Expr* coercedArg = nullptr;
+                //    bool argResult = _readValueFromInitializerList(
+                //        baseStructType,
+                //        outToExpr ? &coercedArg : nullptr,
+                //        fromInitializerListExpr,
+                //        ioArgIndex);
+
+                //    // No point in trying further if any argument fails
+                //    if (!argResult)
+                //        return false;
+
+                //    if (coercedArg)
+                //    {
+                //        coercedArgs.add(coercedArg);
+                //    }
+                //}
+
+                // Now we will try to corce the initializer list (in order) into a constructor.
+                ConstructorDecl* defaultCtor = nullptr;
+                List<ConstructorDecl*> ctorList = _getCtorList(this->getASTBuilder(), this, toStructDecl, &defaultCtor);
+                
+                // 1.
+                // Easy case of default constructor
+                if (defaultCtor && coercedArgs.getCount() == 0)
                 {
-                    Expr* coercedArg = nullptr;
-                    bool argResult = _readValueFromInitializerList(
-                        baseStructType,
-                        outToExpr ? &coercedArg : nullptr,
-                        fromInitializerListExpr,
-                        ioArgIndex);
-
-                    // No point in trying further if any argument fails
-                    if (!argResult)
-                        return false;
-
-                    if (coercedArg)
+                    if (outToExpr)
                     {
-                        coercedArgs.add(coercedArg);
+                        auto* invoke = this->getASTBuilder()->create<InvokeExpr>();
+                        auto member = this->getASTBuilder()->getMemberDeclRef(toStructDeclRef, defaultCtor);
+                        invoke->functionExpr = this->ConstructDeclRefExpr(member, nullptr, defaultCtor->loc, nullptr);
+                        invoke->type = fromInitializerListExpr->type;
+                        *outToExpr = invoke;
                     }
+                    return true;
                 }
 
-                // We will go through the fields in order and try to match them
-                // up with initializer arguments.
-                //
-                for(auto fieldDeclRef : getMembersOfType<VarDecl>(m_astBuilder, toStructDeclRef, MemberFilterStyle::Instance))
+                // Non-default constructor case
+                List<Expr*> maybeArgList;
+                maybeArgList.reserve(argCount);
+
+                for (auto& ctor : ctorList)
                 {
-                    Expr* coercedArg = nullptr;
-                    bool argResult = _readValueFromInitializerList(
-                        getType(m_astBuilder, fieldDeclRef),
-                        outToExpr ? &coercedArg : nullptr,
-                        fromInitializerListExpr,
-                        ioArgIndex);
+                    // Skip if incompatible param count
+                    if (ctor->getParameters().getCount() != Index(argCount))
+                        continue;
 
-                    // No point in trying further if any argument fails
-                    if(!argResult)
-                        return false;
+                    // Skip non-visible constructors
+                    //TOOD: warn if valid but skipped
+                    if (!isDeclVisible(ctor))
+                        continue;
 
-                    if( coercedArg )
+                    auto memberList = getMembersOfType<VarDeclBase>(getASTBuilder(), toStructDeclRef, MemberFilterStyle::Instance);
+                    List<ConstructorDecl*> maybeCandidate;
+                    auto parameters = getParameters(m_astBuilder, ctor);
+                    auto parametersCount = parameters.getCount();
+                    bool isGenericCall = false;
+                    for (auto index = coercedArgs.getCount(); index < parametersCount; index++)
                     {
-                        coercedArgs.add(coercedArg);
+                        auto ctorParam = parameters[index];
+                        auto paramType = getType(getASTBuilder(), ctorParam);
+                        auto arg = fromInitializerListExpr->args[ioArgIndex];
+                        
+                        Expr* coercedArg = nullptr;
+                        // We cannot coerce generic args of unknown value since these do not automatically 
+                        // specialize into each other. This means we need to detect if a type has unresolved
+                        // generics before coercing types. Types will validate later in the compile anyways.
+                        if (_isUnresolvedGeneric(paramType))
+                        {
+                            coercedArg = arg;
+                            isGenericCall = true;
+                            ioArgIndex++;
+                        }
+                        else
+                        {
+                            //bool argResult = _readValueFromInitializerList(
+                            //    paramType,
+                            //    outToExpr ? &coercedArg : nullptr,
+                            //    fromInitializerListExpr,
+                            //    ioArgIndex);
+                            coercedArg = arg;
+                            ioArgIndex++;
+                        }
+
+                        if(coercedArg)
+                            maybeArgList.add(coercedArg);
+                    }
+                    if (maybeArgList.getCount() != 0)
+                    {
+                        if (outToExpr)
+                        {
+                            for (auto i : maybeArgList)
+                                coercedArgs.add(i);
+
+                            // We want lookup to resolve our init function using Slang 'lookup'.
+                            // This is important because otherwise we need to directly synth a genericDecl wrapped 
+                            // ctor which complicates logic a large amount (and ultimately is not needed).
+                            auto ctorToInvoke = m_astBuilder->create<VarExpr>();
+                            ctorToInvoke->scope = this->getOuterScope();
+                            ctorToInvoke->name = getName(String(toStructDecl->getName()->text));
+                            
+                            Expr* callee = ctorToInvoke;
+
+                            // TODO: This logic is a hole in the Slang generic inference logic and should
+                            // be moved to the 'lookup' code somehow.
+                            // Slang should be checking parameters to deduce the generics of a call in a more robust fashion
+                            if (isGenericCall)
+                            {
+                                // We must specialize our ctor with every generic argument (in-order)
+                                // found in our args list.
+                                auto genericInvoke = m_astBuilder->create<GenericAppExpr>();
+                                for (auto arg : coercedArgs)
+                                {
+                                    auto genericArgListOfArg = _getGenericAppDeclRefType(getType(m_astBuilder, arg));
+                                    if (!genericArgListOfArg)
+                                        continue;
+                                    genericInvoke->arguments.reserve(genericInvoke->arguments.getCount() + genericArgListOfArg->getArgCount());
+                                    for (auto genericArgOperandInfo : genericArgListOfArg->getArgs())
+                                    {
+                                        for (auto opIndex = 0; opIndex < genericArgOperandInfo->getOperandCount(); opIndex++)
+                                        {
+                                            auto genericArg = genericArgOperandInfo->tryGetOperand(opIndex);
+                                            if (auto genericArgDeclRef = _getDeclRefFromVal(genericArg))
+                                            {
+                                                //Don't pass as an arg a type constraints
+                                                if (as<GenericTypeConstraintDecl>(genericArgDeclRef->getDecl()))
+                                                    continue;
+
+                                                auto genericArgExpr = m_astBuilder->create<VarExpr>();
+                                                genericArgExpr->declRef = genericArgDeclRef;
+
+                                                genericInvoke->arguments.add(genericArgExpr);
+                                            }
+                                        }
+                                    }
+                                }
+                                genericInvoke->functionExpr = ctorToInvoke;
+                                callee = genericInvoke;
+                            }
+
+                            InvokeExpr* constructorExpr = m_astBuilder->create<InvokeExpr>();
+                            constructorExpr->loc = fromInitializerListExpr->loc;
+                            constructorExpr->functionExpr = callee;
+                            constructorExpr->arguments.addRange(coercedArgs);
+                            constructorExpr->type = toType;
+
+                            *outToExpr = CheckExpr(constructorExpr);
+                        }
+                        return true;
                     }
                 }
             }

@@ -914,6 +914,11 @@ namespace Slang
         return false;
     }
 
+    bool SemanticsVisitor::isDeclVisible(DeclRef<Decl> declRef)
+    {
+        return isDeclVisibleFromScope(declRef, m_outerScope);
+    }
+
     LookupResult SemanticsVisitor::filterLookupResultByVisibility(const LookupResult& lookupResult)
     {
         if (!m_outerScope)
@@ -2650,6 +2655,43 @@ namespace Slang
         for (auto & arg : expr->arguments)
         {
             arg = CheckTerm(arg);
+        }
+
+        //if (auto genApp = as<GenericAppExpr>(expr->functionExpr))
+        //{
+        //    if (auto varExpr = as<VarExpr>(genApp->functionExpr))
+        //    {
+        //        if (varExpr->name)
+        //        {
+        //            if (varExpr->name->text.equals("__TextureMip"))
+        //            {
+        //                __debugbreak();
+        //            }
+        //        }
+        //    }
+        //}
+        //if (auto genApp = as<GenericAppExpr>(expr->functionExpr))
+        //{
+        //    if (auto varExpr = as<VarExpr>(genApp->functionExpr))
+        //    {
+        //        if (varExpr->name)
+        //        {
+        //            if (varExpr->name->text.equals("__TextureMips"))
+        //            {
+        //                int a = 0;
+        //            }
+        //        }
+        //    }
+        //}
+        if (auto varExpr = as<VarExpr>(expr->functionExpr))
+        {
+            if (varExpr->name)
+            {
+                if (varExpr->name->text.equals("TextureFootprint"))
+                {
+                    int a = 0;
+                }
+            }
         }
 
         // if the expression is '&&' or '||', we will convert it

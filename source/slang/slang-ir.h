@@ -2289,7 +2289,7 @@ public:
     };
 
     static RefPtr<IRModule> create(Session* session);
-
+    
     SLANG_FORCE_INLINE Session* getSession() const { return m_session; }
     SLANG_FORCE_INLINE IRModuleInst* getModuleInst() const { return m_moduleInst;  }
     SLANG_FORCE_INLINE MemoryArena& getMemoryArena() { return m_memoryArena; }

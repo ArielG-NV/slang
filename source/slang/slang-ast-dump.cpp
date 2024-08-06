@@ -711,6 +711,18 @@ struct ASTDumpContext
         m_writer->emit("}");
     }
 
+    template<typename T>
+    void dump(const HashSet<T>& hashSet)
+    {
+        m_writer->emit("hash_set(");
+        for(auto i : hashSet)
+        {
+            m_writer->emit(i);
+            m_writer->emit(", ");
+        }
+        m_writer->emit(")");
+    }
+
     void dump(const CapabilitySet& capSet)
     {
         m_writer->emit("capability_set(");

@@ -242,6 +242,40 @@ struct SerialTypeInfo<List<T, ALLOCATOR>>
     }
 };
 
+// HashSet
+template<typename T>
+struct SerialTypeInfo<HashSet<T>>
+{
+    SerialIndex index;
+    
+    typedef SerialIndex SerialType;
+    typedef HashSet<T> NativeType;
+    enum { SerialAlignment = SLANG_ALIGN_OF(SerialIndex) };
+    static void toSerial(SerialWriter* writer, const void* native, void* serial)
+    {
+        auto& src = *(const NativeType*)native;
+        auto& dst = *(SerialType*)serial;
+
+        List<T> backingList;
+        backingList.reserve(src.getCount());
+        for(auto i : src)
+            backingList.add(i);
+
+        dst = writer->addArray(backingList.getBuffer(), backingList.getCount());
+    }
+    static void toNative(SerialReader* reader, const void* serial, void* native)
+    {
+        auto& dst = *(NativeType*)native;
+        auto& src = *(const SerialType*)serial;
+        
+        List<T> backingList;
+        reader->getArray(src, backingList);
+
+        for(auto i : backingList)
+            dst.add(i);
+    }
+};
+
 // String
 template <>
 struct SerialTypeInfo<String>

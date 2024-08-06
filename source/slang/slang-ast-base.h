@@ -419,6 +419,11 @@ class Val : public NodeBase
     Val* resolveImpl();
     Val* resolve();
 
+    Val* tryGetOperand(Index index) const
+    {
+        return (m_operands[index].kind == ValNodeOperandKind::ValNode) ? (Val*)m_operands[index].values.nodeOperand : nullptr;
+    }
+
     Val* getOperand(Index index) const
     {
         SLANG_ASSERT(m_operands[index].kind == ValNodeOperandKind::ValNode);

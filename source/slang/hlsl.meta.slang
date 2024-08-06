@@ -19929,11 +19929,11 @@ ${
 
         case hlsl:
             uint isSingleLod = 0;
-            Footprint footprint =  {__queryFootprint$(CoarseOrFine)NVAPI(
+            Footprint footprint =  Footprint(__queryFootprint$(CoarseOrFine)NVAPI(
                 Shape.dimensions,
                 __getRegisterSpace(this), __getRegisterIndex(this),
                 __getRegisterSpace(sampler), __getRegisterIndex(sampler),
-                __vectorReshape<3>(coords), granularity, /* out */isSingleLod), false};
+                __vectorReshape<3>(coords), granularity, /* out */isSingleLod), false);
             footprint._isSingleLevel = (isSingleLod != 0);
             return footprint;
         }
@@ -19962,11 +19962,11 @@ ${
             return footprint;
         case hlsl:
             uint isSingleLod = 0;
-            Footprint footprint = {__queryFootprint$(CoarseOrFine)BiasNVAPI(
+            Footprint footprint = Footprint(__queryFootprint$(CoarseOrFine)BiasNVAPI(
                 Shape.dimensions,
                 __getRegisterSpace(this), __getRegisterIndex(this),
                 __getRegisterSpace(sampler), __getRegisterIndex(sampler),
-                __vectorReshape<3>(coords), granularity, lodBias, /* out */isSingleLod), false}; 
+                __vectorReshape<3>(coords), granularity, lodBias, /* out */isSingleLod), false); 
             
             footprint._isSingleLevel = (isSingleLod != 0);
             return footprint;
@@ -20045,11 +20045,11 @@ ${
             return footprint;
         case hlsl:
             uint isSingleLod = 0;
-            Footprint footprint = {__queryFootprint$(CoarseOrFine)LevelNVAPI(
+            Footprint footprint = Footprint(__queryFootprint$(CoarseOrFine)LevelNVAPI(
                 Shape.dimensions,
                 __getRegisterSpace(this), __getRegisterIndex(this),
                 __getRegisterSpace(sampler), __getRegisterIndex(sampler),
-                __vectorReshape<3>(coords), granularity, lod, /* out */isSingleLod), false};
+                __vectorReshape<3>(coords), granularity, lod, /* out */isSingleLod), false);
             
             footprint._isSingleLevel = (isSingleLod != 0);
             return footprint;

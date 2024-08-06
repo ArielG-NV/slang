@@ -9,6 +9,10 @@ buffer MyBlockName
     uint data[];
 } outputBuffer;
 
+asdasd
+
+layout(location = 2) rayPayloadEXT vec4 payload;
+
 // CHECK_GLSL-DAG: rayPayloadEXT
 // CHECK_SPV-DAG: RayPayload{{NV|KHR}}
 layout(location = 2) rayPayloadEXT vec4 payload;

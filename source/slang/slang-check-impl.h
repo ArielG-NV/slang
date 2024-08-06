@@ -1207,6 +1207,7 @@ namespace Slang
 
         DeclVisibility getTypeVisibility(Type* type);
         bool isDeclVisibleFromScope(DeclRef<Decl> declRef, Scope* scope);
+        bool isDeclVisible(DeclRef<Decl> declRef);
         LookupResult filterLookupResultByVisibility(const LookupResult& lookupResult);
         LookupResult filterLookupResultByVisibilityAndDiagnose(const LookupResult& lookupResult, SourceLoc loc, bool& outDiagnosed);
 
@@ -1449,7 +1450,7 @@ namespace Slang
             Type*                toType,
             Expr**               outToExpr,
             InitializerListExpr* fromInitializerListExpr,
-            UInt                       &ioInitArgIndex);
+            UInt                 &ioInitArgIndex);
 
             /// Read an aggregate value from an initializer list expression.
             ///
@@ -2879,4 +2880,23 @@ namespace Slang
         FrontEndEntryPointRequest* entryPointReq);
 
     bool resolveStageOfProfileWithEntryPoint(Profile& entryPointProfile, CompilerOptionSet& optionSet, const List<RefPtr<TargetRequest>>& targets, FuncDecl* entryPointFuncDecl, DiagnosticSink* sink);
+
+    LookupResult lookUpMember(
+        ASTBuilder* astBuilder,
+        SemanticsVisitor* semantics,
+        Name* name,
+        Type* type,
+        Scope* sourceScope,
+        LookupMask          mask,
+        LookupOptions       options);
+
+    ConstructorDecl* _getDefaultCtor(StructDecl* structDecl);
+    List<ConstructorDecl*> _getCtorList(ASTBuilder* m_astBuilder, SemanticsVisitor* visitor, StructDecl* structDecl, ConstructorDecl** defaultCtorOut);
+
+    DeclRefBase* _getDeclRefFromVal(Val* val);
+
+    // Look for unresolved generic param. This is important to determine if an arg can be coerced as is.
+    bool _isUnresolvedGeneric(GenericAppDeclRef* genericApp);
+    GenericAppDeclRef* _getGenericAppDeclRefType(Type* argType);
+    bool _isUnresolvedGeneric(Type* genericApp);
 }

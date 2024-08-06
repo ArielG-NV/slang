@@ -43,10 +43,12 @@ SLANG_RETURN_NEVER void handleSignal(SignalType type, char const* message)
     buf << typeText << ": " << message;
 
     // Can be useful to enable during debug when problem is on CI
-    if (false)
+    // Or something fatally crashes
+#ifdef _DEBUG
     {
         printf("%s\n", _getMessage(type, message).getBuffer());
     }
+#endif
 
 #if SLANG_HAS_EXCEPTIONS
     switch (type)
