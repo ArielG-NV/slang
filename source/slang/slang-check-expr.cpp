@@ -887,9 +887,8 @@ namespace Slang
         return DeclVisibility::Public;
     }
 
-    bool SemanticsVisitor::isDeclVisibleFromScope(DeclRef<Decl> declRef, Scope* scope)
+    bool SemanticsVisitor::isVisibilityOfDeclVisibleInScope(DeclRef<Decl> declRef, DeclVisibility visibility, Scope* scope)
     {
-        auto visibility = getDeclVisibility(declRef.getDecl());
         if (visibility == DeclVisibility::Public)
             return true;
         if (visibility == DeclVisibility::Internal)
@@ -918,7 +917,17 @@ namespace Slang
             }
             return false;
         }
-        return false;
+        return false;   
+    }
+
+    bool SemanticsVisitor::isDeclVisibleFromScope(DeclRef<Decl> declRef, Scope* scope)
+    {
+        return isVisibilityOfDeclVisibleInScope(declRef, getDeclVisibility(declRef.getDecl()), scope);
+    }
+
+    bool SemanticsVisitor::isDeclVisible(DeclRef<Decl> declRef)
+    {
+        return isDeclVisibleFromScope(declRef, m_outerScope);
     }
 
     LookupResult SemanticsVisitor::filterLookupResultByVisibility(const LookupResult& lookupResult)
@@ -2633,7 +2642,7 @@ namespace Slang
 
         if (auto varExpr = as<VarExpr>(expr->functionExpr))
         {
-            if ((varExpr->name->text == "&&") || (varExpr->name->text == "||"))
+            if (varExpr->name && (varExpr->name->text == "&&" || varExpr->name->text == "||"))
             {
                 // We only use short-circuiting in scalar input, will fall back
                 // to non-short-circuiting in vector input.
@@ -2783,9 +2792,13 @@ namespace Slang
                             }
                             else
                             {
-                                getSink()->diagnose(
-                                    m_treatAsDifferentiableExpr,
-                                    Diagnostics::useOfNoDiffOnDifferentiableFunc);
+                                // We should only error if our TreatAsDifferentiableExpr::Flavor is NoDiff.
+                                if (m_treatAsDifferentiableExpr->flavor == TreatAsDifferentiableExpr::Flavor::NoDiff)
+                                {
+                                    getSink()->diagnose(
+                                        m_treatAsDifferentiableExpr,
+                                        Diagnostics::useOfNoDiffOnDifferentiableFunc);
+                                }
                             }
                         }
                     }

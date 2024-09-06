@@ -740,6 +740,14 @@ namespace Slang
             m_mapTypePairToImplicitCastMethod[key] = candidate;
         }
 
+        void cacheIsCStyleStruct(StructDecl* structDecl, bool isCStyleStruct)
+        {
+            m_isCStyleStruct[structDecl] = isCStyleStruct;
+        }
+        bool* tryGetIsCStyleStructFromCache(StructDecl* structDecl)
+        {
+            return m_isCStyleStruct.tryGetValue(structDecl);
+        }
     private:
             /// Mapping from type declarations to the known extensiosn that apply to them
         Dictionary<AggTypeDecl*, RefPtr<CandidateExtensionList>> m_mapTypeDeclToCandidateExtensions;
@@ -865,6 +873,7 @@ namespace Slang
         Dictionary<DeclRef<Decl>, InheritanceInfo> m_mapDeclRefToInheritanceInfo;
         Dictionary<TypePair, SubtypeWitness*> m_mapTypePairToSubtypeWitness;
         Dictionary<ImplicitCastMethodKey, ImplicitCastMethod> m_mapTypePairToImplicitCastMethod;
+        Dictionary<StructDecl*, bool> m_isCStyleStruct;
     };
 
         /// Local/scoped state of the semantic-checking system
@@ -1256,7 +1265,9 @@ namespace Slang
             Expr* originalExpr);
 
         DeclVisibility getTypeVisibility(Type* type);
+        bool isVisibilityOfDeclVisibleInScope(DeclRef<Decl> declRef, DeclVisibility visibility, Scope* scope);
         bool isDeclVisibleFromScope(DeclRef<Decl> declRef, Scope* scope);
+        bool isDeclVisible(DeclRef<Decl> declRef);
         LookupResult filterLookupResultByVisibility(const LookupResult& lookupResult);
         LookupResult filterLookupResultByVisibilityAndDiagnose(const LookupResult& lookupResult, SourceLoc loc, bool& outDiagnosed);
 
@@ -1495,11 +1506,12 @@ namespace Slang
             /// If the routine fails and `outToExpr` is non-null,
             /// then a suitable diagnostic will be emitted.
             ///
+        template<bool UseLegacyLogic>
         bool _readValueFromInitializerList(
             Type*                toType,
             Expr**               outToExpr,
             InitializerListExpr* fromInitializerListExpr,
-            UInt                       &ioInitArgIndex);
+            UInt                 &ioInitArgIndex);
 
             /// Read an aggregate value from an initializer list expression.
             ///
@@ -1520,6 +1532,7 @@ namespace Slang
             /// If the routine fails and `outToExpr` is non-null,
             /// then a suitable diagnostic will be emitted.
             ///
+        template<bool UseLegacyLogic>
         bool _readAggregateValueFromInitializerList(
             Type*                inToType,
             Expr**               outToExpr,
@@ -2802,12 +2815,12 @@ namespace Slang
         // deal with this cases here, even if they are no-ops.
         //
 
+        // Do not error and just return since a term may
+        // be checked so it can be resolved into a valid
+        // term (argument of an 'Invoke' for example)
     #define CASE(NAME)                                                                           \
         Expr* visit##NAME(NAME* expr)                                                            \
         {                                                                                        \
-            if (!getShared()->isInLanguageServer())                                              \
-                SLANG_DIAGNOSE_UNEXPECTED(getSink(), expr, "should not appear in input syntax"); \
-            expr->type = m_astBuilder->getErrorType();                                           \
             return expr;                                                                         \
         }
 
@@ -2980,4 +2993,36 @@ namespace Slang
         FrontEndEntryPointRequest* entryPointReq);
 
     bool resolveStageOfProfileWithEntryPoint(Profile& entryPointProfile, CompilerOptionSet& optionSet, const List<RefPtr<TargetRequest>>& targets, FuncDecl* entryPointFuncDecl, DiagnosticSink* sink);
+
+    LookupResult lookUpMember(
+        ASTBuilder* astBuilder,
+        SemanticsVisitor* semantics,
+        Name* name,
+        Type* type,
+        Scope* sourceScope,
+        LookupMask          mask,
+        LookupOptions       options);
+
+    ConstructorDecl* _getDefaultCtor(StructDecl* structDecl);
+    bool allParamHaveInitExpr(ConstructorDecl* ctor);
+    List<ConstructorDecl*> _getCtorList(ASTBuilder* m_astBuilder, SemanticsVisitor* visitor, StructDecl* structDecl, ConstructorDecl** defaultCtorOut);
+    bool DiagnoseIsAllowedInitExpr(VarDeclBase* varDecl, DiagnosticSink* sink);
+    bool isDefaultInitializable(Type* varDeclType, VarDeclBase* associatedDecl);
+    Expr* constructDefaultInitExprForVar(SemanticsVisitor* visitor, TypeExp varDeclType, VarDeclBase* decl);
+
+    enum class ConstructZeroInitListOptions : UInt
+    {
+        None = 0 << 0,
+        PreferZeroInitFunc = 1 << 0,
+        CheckToAvoidRecursion = 1 << 2,
+    };
+    Expr* constructZeroInitListFunc(SemanticsVisitor* visitor, StructDecl* structDecl, Type* structDeclType, ConstructZeroInitListOptions options);
+    FuncDecl* findZeroInitListFunc(StructDecl* structDecl);
+
+    bool checkIfCStyleStruct(SemanticsVisitor* visitor, StructDecl* decl);
+
+    DefaultConstructExpr* createDefaultConstructExprForType(ASTBuilder* m_astBuilder, QualType type, SourceLoc loc);
+
+    DeclRefBase* _getDeclRefFromVal(Val* val);
+
 }
