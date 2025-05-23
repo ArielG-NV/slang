@@ -31,6 +31,14 @@ Type* getPointedToTypeIfCanImplicitDeref(Type* type)
     {
         return refType->getValueType();
     }
+    else if (auto someType = as<SomeType>(type))
+    {
+        return someType->getValueType();
+    }
+    else if (auto someType = as<UnboundSomeType>(type))
+    {
+        return someType->getValueType();
+    }
     return nullptr;
 }
 

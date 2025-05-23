@@ -5400,6 +5400,32 @@ Expr* SemanticsExprVisitor::visitPointerTypeExpr(PointerTypeExpr* expr)
     return expr;
 }
 
+Expr* SemanticsExprVisitor::visitSomeTypeExpr(SomeTypeExpr* expr)
+{
+    expr->base = CheckProperType(expr->base);
+    if (as<ErrorType>(expr->base.type))
+        expr->type = expr->base.type;
+
+    auto declRefType = as<DeclRefType>(expr->base.type);
+    if (!declRefType)
+    {
+        getSink()->diagnose(expr, Diagnostics::cannotAssignNonInterfaceToSomeType, expr->base.type);
+    }
+
+    auto interfaceType = as<InterfaceDecl>(declRefType->getDeclRefBase()->getDecl());
+    if (!interfaceType)
+    {
+        getSink()->diagnose(expr, Diagnostics::cannotAssignNonInterfaceToSomeType, expr->base.type);
+    }
+    else
+    {
+        auto someType = m_astBuilder->getSomeType(interfaceType);
+        expr->type = m_astBuilder->getTypeType(someType);
+    }
+
+    return expr;
+}
+
 Expr* SemanticsExprVisitor::visitModifiedTypeExpr(ModifiedTypeExpr* expr)
 {
     // The base type should be a proper type (not an expression, generic, etc.)

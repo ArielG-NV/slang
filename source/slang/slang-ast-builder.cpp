@@ -285,6 +285,19 @@ PtrType* ASTBuilder::getPtrType(Type* valueType, AddressSpace addrSpace)
     return dynamicCast<PtrType>(getPtrType(valueType, addrSpace, "PtrType"));
 }
 
+SomeType* ASTBuilder::getSomeType(InterfaceDecl* baseInterfaceDecl)
+{
+    // Every SomeType has a unqiue base type, a unique `DeclRefType` of InterfaceDecl gives us this principle.
+    return dynamicCast<SomeType>(
+        getSpecializedBuiltinType(DeclRefType::create(this, baseInterfaceDecl), "SomeType"));
+}
+
+UnboundSomeType* ASTBuilder::getUnboundSomeType(DeclRefType* valueType)
+{
+    // This should be a type that degrades into an InterfaceDecl?
+    return dynamicCast<UnboundSomeType>(getSpecializedBuiltinType(valueType, "UnboundSomeType"));
+}
+
 Type* ASTBuilder::getDefaultLayoutType()
 {
     return getSpecializedBuiltinType({}, "DefaultDataLayoutType");

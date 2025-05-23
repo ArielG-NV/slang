@@ -865,6 +865,19 @@ void ASTPrinter::addExpr(Expr* expr)
 
         sb << "*";
     }
+    else if (const auto someTypeExpr = as<SomeTypeExpr>(expr))
+    {
+        sb << "some ";
+        if (pointerTypeExpr->base.type)
+        {
+            addType(pointerTypeExpr->base.type);
+        }
+        else
+        {
+            sb << "<unknown-type>";
+        }
+
+    }
     else if (const auto funcTypeExpr = as<FuncTypeExpr>(expr))
     {
         sb << "(";

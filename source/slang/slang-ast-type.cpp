@@ -429,6 +429,16 @@ Type* PtrTypeBase::getValueType()
     return as<Type>(_getGenericTypeArg(this, 0));
 }
 
+Type* SomeType::getValueType()
+{
+    return as<Type>(_getGenericTypeArg(this, 0));
+}
+
+Type* UnboundSomeType::getValueType()
+{
+    return as<Type>(_getGenericTypeArg(this, 0));
+}
+
 Type* OptionalType::getValueType()
 {
     return as<Type>(_getGenericTypeArg(this, 0));

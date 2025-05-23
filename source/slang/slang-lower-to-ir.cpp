@@ -2012,6 +2012,26 @@ struct ValLoweringVisitor : ValVisitor<ValLoweringVisitor, LoweredValInfo, Lower
             emitDeclRef(context, declRef, context->irBuilder->getTypeKind()));
     }
 
+    IRType* visitSomeType(SomeType* type)
+    {
+        auto declRefType = as<DeclRefType>(type->getValueType());
+        SLANG_ASSERT(type); //must be declRefType currently
+
+        return (IRType*)getSimpleVal(
+            context,
+            emitDeclRef(context, declRefType->getDeclRef(), context->irBuilder->getTypeKind()));
+    }
+
+    IRType* visitSomeType(UnboundSomeType* type)
+    {
+        auto declRefType = as<DeclRefType>(type->getValueType());
+        SLANG_ASSERT(type); // must be declRefType currently
+
+        return (IRType*)getSimpleVal(
+            context,
+            emitDeclRef(context, declRefType->getDeclRef(), context->irBuilder->getTypeKind()));
+    }
+
     IRType* visitTupleType(TupleType* type)
     {
         List<IRType*> elementTypes;
@@ -4587,8 +4607,11 @@ struct ExprLoweringVisitorBase : public ExprVisitor<Derived, LoweredValInfo>
         }
         else
         {
-            SLANG_UNIMPLEMENTED_X("codegen for deref expression");
-            UNREACHABLE_RETURN(LoweredValInfo());
+            // this happens when Deref is a syntactic sugar ==> `SomeType<IFoo>` has implicit deref, Not a pointer though.
+            return LoweredValInfo::simple(loweredBaseVal);
+
+            //SLANG_UNIMPLEMENTED_X("codegen for deref expression");
+            //UNREACHABLE_RETURN(LoweredValInfo());
         }
     }
 
@@ -5487,6 +5510,12 @@ struct ExprLoweringVisitorBase : public ExprVisitor<Derived, LoweredValInfo>
     }
 
     LoweredValInfo visitPointerTypeExpr(PointerTypeExpr* /*expr*/)
+    {
+        SLANG_UNIMPLEMENTED_X("'*' type expression during code generation");
+        UNREACHABLE_RETURN(LoweredValInfo());
+    }
+
+    LoweredValInfo visitSomeTypeExpr(SomeTypeExpr* /*expr*/)
     {
         SLANG_UNIMPLEMENTED_X("'*' type expression during code generation");
         UNREACHABLE_RETURN(LoweredValInfo());

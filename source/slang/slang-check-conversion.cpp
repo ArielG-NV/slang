@@ -1312,6 +1312,30 @@ bool SemanticsVisitor::_coerce(
         }
     }
 
+    // SomeType can be casted as if it was not a `SomeType`
+    if (auto someType = as<SomeType>(toType))
+    {
+        return _coerce(
+            site,
+            someType->getValueType(),
+            outToExpr,
+            fromType,
+            fromExpr,
+            sink,
+            outCost);
+    }
+    if (auto unboundSomeType = as<UnboundSomeType>(toType))
+    {
+        return _coerce(
+            site,
+            unboundSomeType->getValueType(),
+            outToExpr,
+            fromType,
+            fromExpr,
+            sink,
+            outCost);
+    }
+
     // nullptr_t can be cast into any pointer type.
     if (as<NullPtrType>(fromType) && as<PtrType>(toType))
     {

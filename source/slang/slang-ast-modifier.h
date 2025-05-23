@@ -90,6 +90,12 @@ class DynModifier : public Modifier
     FIDDLE(...)
 };
 
+// FIDDLE()
+// class SomeModifier : public Modifier
+// {
+//     FIDDLE(...)
+// };
+
 FIDDLE()
 class HLSLExportModifier : public Modifier
 {

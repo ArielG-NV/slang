@@ -503,6 +503,12 @@ public:
     // is looked up as a builtin type.
     PtrType* getPtrType(Type* valueType, AddressSpace addrSpace);
 
+    // Construct the type `some valueType`
+    SomeType* getSomeType(InterfaceDecl* valueType);
+
+    // Construct the type `out some valueType` or uninitialized `some valueType`
+    UnboundSomeType* getUnboundSomeType(DeclRefType* valueType);
+
     // Construct the type `Out<valueType>`
     OutType* getOutType(Type* valueType);
 

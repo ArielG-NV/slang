@@ -661,6 +661,24 @@ class EnumTypeType : public BuiltinType
     // TODO: provide accessors for the declaration, the "tag" type, etc.
 };
 
+// Base type for `some` type
+FIDDLE()
+class SomeType : public DeclRefType
+{
+    FIDDLE(...)
+    // Get underlying type
+    Type* getValueType();
+};
+
+// For non-type-locked `some` types
+FIDDLE()
+class UnboundSomeType : public DeclRefType
+{
+    FIDDLE(...)
+    // Get underlying type
+    Type* getValueType();
+};
+
 // Base class for types that map down to
 // simple pointers as part of code generation.
 FIDDLE()

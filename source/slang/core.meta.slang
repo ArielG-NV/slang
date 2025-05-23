@@ -1252,6 +1252,22 @@ struct __none_t
 {
 };
 
+//@hidden:
+__magic_type(SomeType)
+__generic<T>
+struct Some
+{
+    typealias SomeType = Some<T>;
+};
+
+//@hidden:
+__magic_type(UnboundSomeType)
+__generic<T>
+struct UnboundSome
+{
+    typealias UnboundSomeType = UnboundSome<T>;
+};
+
 //@public:
 /// Represents a pointer type.
 /// @param T The type of the value pointed to.
