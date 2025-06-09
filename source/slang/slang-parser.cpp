@@ -1692,7 +1692,7 @@ static void maybeParseGenericConstraints(Parser* parser, ContainerDecl* genericP
     Token whereToken;
     while (AdvanceIf(parser, "where", &whereToken))
     {
-        if(AdvanceIf(parser, "noncopyable"))
+        if (AdvanceIf(parser, "noncopyable"))
         {
             parser->ReadToken(TokenType::LParent);
             auto targetType = parser->ParseTypeExp();
