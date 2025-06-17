@@ -3344,9 +3344,16 @@ void collectParameterLists(
                     makeVaryingInputParamConstRef(paramInfo);
                 ioParameterLists->params.add(paramInfo);
             }
-            maybeAddReturnDestinationParam(
-                ioParameterLists,
-                getResultType(context->astBuilder, callableDeclRef));
+
+            // We will have a double `ref` added as out if __subscript{get;}
+            // since __subscript is not "returning" a value, it is just an intermediate.
+            //
+            // Not the case with property{get;} since we ignore this intermediate.
+            // 
+            if (!as<SubscriptDecl>(declRef.getParent()))
+                maybeAddReturnDestinationParam(
+                    ioParameterLists,
+                    getResultType(context->astBuilder, callableDeclRef));
         }
     }
 }
@@ -3400,7 +3407,6 @@ void _lowerFuncDeclBaseTypeInfo(
     auto& parameterLists = outInfo.parameterLists;
     collectParameterLists(
         context,
-
         declRef,
         &parameterLists,
         kParameterListCollectMode_Default,
@@ -3466,7 +3472,9 @@ void _lowerFuncDeclBaseTypeInfo(
     if (parameterLists.params.getCount() && parameterLists.params.getLast().isReturnDestination)
     {
         irResultType = context->irBuilder->getVoidType();
-        outInfo.returnViaLastRefParam = true;
+
+        // cannot return ref as last param if a `RefAccessor`, semantically meaningless.
+        outInfo.returnViaLastRefParam = !declRef.as<RefAccessorDecl>();
     }
     else
     {
@@ -3546,7 +3554,17 @@ static LoweredValInfo _emitCallToAccessor(
 
     allArgs.addRange(args, argCount);
 
-    LoweredValInfo result = emitCallToDeclRef(
+    LoweredValInfo resultOfRefParam;
+    if (info.returnViaLastRefParam)
+    {
+         // Create a temporary variable to hold the result.
+         auto tempVar = context->irBuilder->emitVar(
+             tryGetPointedToType(context->irBuilder, info.paramTypes.getLast()));
+         allArgs.add(tempVar);
+         resultOfRefParam = LoweredValInfo::ptr(tempVar);
+     }
+
+    LoweredValInfo resultOfCall = emitCallToDeclRef(
         context,
         type,
         accessorDeclRef,
@@ -3556,8 +3574,10 @@ static LoweredValInfo _emitCallToAccessor(
         TryClauseEnvironment());
 
     applyOutArgumentFixups(context, fixups);
-
-    return result;
+    
+    if (info.returnViaLastRefParam)
+        return resultOfRefParam;
+    return resultOfCall;
 }
 
 template<typename Derived>
