@@ -1252,18 +1252,43 @@ struct __none_t
 {
 };
 
+// https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#_scope_id
+enum MemoryScope
+{
+    CrossDevice = $( (uint64_t)MemoryScope::CrossDevice),
+    Device = $( (uint64_t)MemoryScope::Device),
+    Workgroup = $( (uint64_t)MemoryScope::Workgroup),
+    Subgroup = $( (uint64_t)MemoryScope::Subgroup),
+    Invocation = $( (uint64_t)MemoryScope::Invocation),
+    QueueFamily = $( (uint64_t)MemoryScope::QueueFamily),
+    ShaderCallKHR = $( (uint64_t)MemoryScope::ShaderCallKHR),
+}
+
+__builtin_enum(CoherentScope)
+enum CoherentScope : uint64_t
+{
+    NotCoherent = $( (uint64_t)CoherentScope::NotCoherent),
+    CrossDevice = $( (uint64_t)CoherentScope::CrossDevice),
+    Device = $( (uint64_t)CoherentScope::Device),
+    Workgroup = $( (uint64_t)CoherentScope::Workgroup),
+    Subgroup = $( (uint64_t)CoherentScope::Subgroup),
+    Invocation = $( (uint64_t)CoherentScope::Invocation),
+    QueueFamily = $( (uint64_t)CoherentScope::QueueFamily),
+    ShaderCallKHR = $( (uint64_t)CoherentScope::ShaderCallKHR),
+}
+
 //@public:
 /// Represents a pointer type.
 /// @param T The type of the value pointed to.
 /// @remarks `T* val` is equivalent to `Ptr<T> val`.
-__generic<T, let addrSpace : uint64_t = $( (uint64_t)AddressSpace::UserPointer)ULL>
+__generic<T, let addrSpace : uint64_t = $( (uint64_t)AddressSpace::UserPointer)ULL, CoherentScope coherentScope = CoherentScope::NotCoherent>
 __magic_type(PtrType)
 __intrinsic_type($(kIROp_PtrType))
 struct Ptr
 {
     __generic<U>
     __intrinsic_op($(kIROp_BitCast))
-    __init(Ptr<U, addrSpace> ptr);
+    __init(Ptr<U, addrSpace, coherentScope> ptr);
 
     __intrinsic_op($(kIROp_CastIntToPtr))
     __init(uint64_t val);
@@ -1280,6 +1305,20 @@ struct Ptr
         ref;
     }
 };
+
+// source\slang\slang-ir-specialize-address-space.cpp ==> use this
+//typealias CoherentPtr<T, CoherentScope coherentScope> = Ptr<T, $( (uint64_t)AddressSpace::UserPointer)ULL, coherentScope>;
+
+//__generic<T, CoherentScope coherentScope = CoherentScope::NotCoherent>
+//extension CoherentPtr<T, coherentScope>
+//{
+//    // non-coherent to coherent is allowed if explicit
+//    //__generic<CoherentScope newCoherentScope>
+//    //__init(CoherentPtr<T, newCoherentScope> ptr)
+//    //{
+//    //    return __slang_noop_cast<CoherentPtr<T, coherentScope>>(ptr);
+//    //}
+//}
 
 //@hidden:
 __intrinsic_op($(kIROp_AlignedAttr))
@@ -3524,18 +3563,6 @@ enum MemoryOrder
     /// Provides the strongest ordering: total order exists between all SeqCst operations
     SeqCst = $(kIRMemoryOrder_SeqCst),
 }
-
-// https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#_scope_id
-enum MemoryScope
-{
-    CrossDevice = 0,
-    Device = 1,
-    Workgroup = 2,
-    Subgroup = 3,
-    Invocation = 4,
-    QueueFamily = 5,
-    ShaderCallKHR = 6,
-};
 
 /// Represents types that can be used in any atomic operations.
 /// Implemented by builtin scalar types: `int`, `uint`, `int64_t`, `uint64_t`, `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `float`, `double` and `half`.

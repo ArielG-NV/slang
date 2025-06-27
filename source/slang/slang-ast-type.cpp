@@ -444,6 +444,11 @@ Val* PtrTypeBase::getAddressSpace()
     return _getGenericTypeArg(this, 1);
 }
 
+Val* PtrTypeBase::getCoherentScope()
+{
+    return _getGenericTypeArg(this, 2);
+}
+
 AddressSpace tryGetAddressSpaceValue(Val* addrSpaceVal)
 {
     AddressSpace addrSpace = AddressSpace::Generic;
