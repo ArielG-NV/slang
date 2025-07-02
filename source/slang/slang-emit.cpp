@@ -474,7 +474,7 @@ void calcRequiredLoweringPassSet(
         result.missingReturn = true;
         break;
     case kIROp_Select:
-        if(!isScalarOrVectorType(inst->getFullType()))
+        if (!isScalarOrVectorType(inst->getFullType()))
             result.nonVectorCompositeSelect = true;
         break;
     }
@@ -1099,15 +1099,16 @@ Result linkAndOptimizeIR(
 
         case CodeGenTarget::SPIRV:
         case CodeGenTarget::SPIRVAssembly:
-        {
-            // SPIRV older than 1.4 must legalize composites
-            // returned from a `select` instruction
-            if (codeGenContext->getTargetProgram()->getOptionSet().getProfileVersion() <= ProfileVersion::SPIRV_1_3)
             {
-                legalizeNonVectorCompositeSelect(targetRequest, irModule, sink);
+                // SPIRV older than 1.4 must legalize composites
+                // returned from a `select` instruction
+                if (codeGenContext->getTargetProgram()->getOptionSet().getProfileVersion() <=
+                    ProfileVersion::SPIRV_1_3)
+                {
+                    legalizeNonVectorCompositeSelect(targetRequest, irModule, sink);
+                }
+                break;
             }
-            break;
-        }
         default:
             break;
         }

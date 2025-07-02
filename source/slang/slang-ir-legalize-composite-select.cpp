@@ -47,7 +47,7 @@ void legalizeASingleNonVectorCompositeSelect(
         afterBlock->insertAtEnd(nextInst);
         nextInst = nextInst->getNextInst();
     }
-    
+
     // Clean up
     selectInst->replaceUsesWith(resultVar);
     selectInst->removeAndDeallocate();
@@ -72,7 +72,11 @@ void legalizeNonVectorCompositeSelect(TargetRequest* target, IRModule* module, D
                 case kIROp_Select:
                     // Replace OpSelect with if/else branch (same process as glslang)
                     if (!isScalarOrVectorType(inst->getFullType()))
-                        legalizeASingleNonVectorCompositeSelect(target, builder, as<IRSelect>(inst), sink);
+                        legalizeASingleNonVectorCompositeSelect(
+                            target,
+                            builder,
+                            as<IRSelect>(inst),
+                            sink);
                     continue;
                 }
             }

@@ -7,5 +7,8 @@ namespace Slang
 {
 class DiagnosticSink;
 
-void legalizeNonVectorCompositeSelect(TargetRequest* target, IRModule* module, DiagnosticSink* sink);
+void legalizeNonVectorCompositeSelect(
+    TargetRequest* target,
+    IRModule* module,
+    DiagnosticSink* sink);
 } // namespace Slang
