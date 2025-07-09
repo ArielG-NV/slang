@@ -4240,7 +4240,9 @@ void legalizeEntryPointForGLSL(
                 sizedArrayType = builder.getPtrType(
                     ptrType->getOp(),
                     sizedArrayType,
-                    ptrType->getAddressSpace());
+                    ptrType->getAddressSpace(),
+                    ptrType->getPtrAccess(),
+                    ptrType->getCoherentScope());
             }
 
             // Change the globals type
