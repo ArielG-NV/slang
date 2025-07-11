@@ -1,4 +1,9 @@
+//TEST:SIMPLE(filecheck=SPIRV):-stage compute -entry computeMain -target spirv
 //TEST(compute):COMPARE_COMPUTE(filecheck-buffer=CHECK):-vk -render-feature cooperative-vector -emit-spirv-directly
+
+// Ensure SPIRV does not do coherent operations here
+// SPIRV-NOT: MakePointerAvailable
+// SPIRV-NOT: MakePointerVisible
 
 //TEST_INPUT: set inputBuffer = ubuffer(data=[1 2 3 4 5 6 7 8 9 10 11 12], stride=4);
 uniform int32_t* inputBuffer;

@@ -23526,15 +23526,28 @@ struct CoopMat
 
     [require(cooperative_matrix)]
     void Store<
-        let matrixLayout : CoopMatMatrixLayout
-    >(T* buffer, uint element, uint stride)
+        let matrixLayout : CoopMatMatrixLayout,
+        CoherentScope coherentScope
+    >( Ptr<T, AddressSpace::UserPointer, Access::Read, coherentScope> buffer, uint element, uint stride)
     {
         let alignment = 16U;
-        return spirv_asm
+        if (coherentScope == CoherentScope::NotCoherent)
         {
-            %pointer:$$T* = OpPtrAccessChain $buffer $element;
-            OpCooperativeMatrixStoreKHR %pointer $this $matrixLayout $stride Aligned !alignment;
-        };
+            return spirv_asm
+            {
+                %pointer:$$T* = OpPtrAccessChain $buffer $element;
+                OpCooperativeMatrixStoreKHR %pointer $this $matrixLayout $stride Aligned !alignment;
+            };
+        }
+        else
+        {
+            const int32_t scope = (int32_t)coherentScope;
+            return spirv_asm
+            {
+                %pointer:$$T* = OpPtrAccessChain $buffer $element;
+                OpCooperativeMatrixStoreKHR %pointer $this $matrixLayout $stride Aligned|MakePointerAvailable|NonPrivatePointer !alignment $scope;
+            };
+        }
     }
 
     [ForceInline]
@@ -23637,15 +23650,29 @@ ${{{{
     [__NoSideEffect]
     [require(cooperative_matrix)]
     static This Load<
-        let matrixLayout : CoopMatMatrixLayout
-    >(T* buffer, uint element, uint stride)
+        let matrixLayout : CoopMatMatrixLayout,
+        Access access,
+        CoherentScope coherentScope
+    >(Ptr<T, AddressSpace::UserPointer, access, coherentScope> buffer, uint element, uint stride)
     {
         let alignment = 16;
-        return spirv_asm
+        if(coherentScope == CoherentScope::NotCoherent)
         {
-            %pointer:$$T* = OpPtrAccessChain $buffer $element;
-            result:$$CoopMat<T, S, M, N, R> = OpCooperativeMatrixLoadKHR %pointer $matrixLayout $stride Aligned !alignment;
-        };
+            return spirv_asm
+            {
+                %pointer:$$T* = OpPtrAccessChain $buffer $element;
+                result:$$CoopMat<T, S, M, N, R> = OpCooperativeMatrixLoadKHR %pointer $matrixLayout $stride Aligned !alignment;
+            };
+        }
+        else
+        {
+            const int32_t scope = (int32_t)coherentScope;
+            return spirv_asm
+            {
+                %pointer:$$T* = OpPtrAccessChain $buffer $element;
+                result:$$CoopMat<T, S, M, N, R> = OpCooperativeMatrixLoadKHR %pointer $matrixLayout $stride Aligned|MakePointerVisible|NonPrivatePointer !alignment $scope;
+            };
+        }
     }
 
     [ForceInline]
@@ -24194,9 +24221,11 @@ CoopMat<T, S, M, N, R> coopMatLoad<
     let M : int,
     let N : int,
     let R : CoopMatMatrixUse,
-    let matrixLayout : CoopMatMatrixLayout
+    let matrixLayout : CoopMatMatrixLayout,
+    Access access,
+    CoherentScope coherentScope
 >(
-    T* buffer,
+    Ptr<T, AddressSpace::UserPointer, access, coherentScope> buffer,
     uint element,
     uint stride)
 {
@@ -24219,6 +24248,24 @@ CoopMat<T, S, M, N, R> coopMatLoad<
     uint stride)
 {
     return CoopMat<T, S, M, N, R>.Load<matrixLayout>(data, element, stride);
+}
+
+[ForceInline]
+[require(spirv, cooperative_matrix)]
+CoopMat<T, S, M, N, R> coopMatLoad<
+    T : __BuiltinArithmeticType,
+    let S : MemoryScope,
+    let M : int,
+    let N : int,
+    let R : CoopMatMatrixUse,
+    let matrixLayout : CoopMatMatrixLayout,
+    let coherentScope : CoherentScope
+>(
+    Ptr<T, AddressSpace::UserPointer, Access::ReadWrite, coherentScope> buffer,
+    uint element,
+    uint stride)
+{
+    return CoopMat<T, S, M, N, R>.Load<matrixLayout>(buffer, element, stride);
 }
 
 
@@ -24559,14 +24606,25 @@ struct CoopVec<T : __BuiltinArithmeticType, let N : int> : IArray<T>, IArithmeti
 
     [ForceInline]
     [require(spirv, cooperative_vector)]
-    void store(T* buffer, int32_t byteOffset16ByteAligned = 0)
+    void store <CoherentScope coherentScope>(Ptr<T, AddressSpace::UserPointer, Access::ReadWrite, coherentScope> buffer, int32_t byteOffset16ByteAligned = 0)
     {
-        let pointer = Ptr<T[]>(buffer);
+        let pointer = Ptr<T[], AddressSpace::UserPointer, Access::ReadWrite, coherentScope>(buffer);
         let alignment = 16;
-        return spirv_asm
+        if (coherentScope == CoherentScope::NotCoherent)
         {
-            OpCooperativeVectorStoreNV $pointer $byteOffset16ByteAligned $this Aligned !alignment;
-        };
+            return spirv_asm
+            {
+                OpCooperativeVectorStoreNV $pointer $byteOffset16ByteAligned $this Aligned !alignment;
+            };
+        }
+        else
+        {
+            const int32_t scope = (int32_t)coherentScope;
+            return spirv_asm
+            {
+                OpCooperativeVectorStoreNV $pointer $byteOffset16ByteAligned $this Aligned|MakePointerAvailable|NonPrivatePointer !alignment $scope;
+            };
+        }
     }
 
     [ForceInline]
@@ -24731,14 +24789,26 @@ struct CoopVec<T : __BuiltinArithmeticType, let N : int> : IArray<T>, IArithmeti
     [ForceInline]
     [__NoSideEffect]
     [require(spirv, cooperative_vector)]
-    static CoopVec<T, N> load(T* buffer, int32_t byteOffset16ByteAligned = 0)
+    static CoopVec<T, N> load<Access access, CoherentScope coherentScope>(Ptr<T, AddressSpace::UserPointer, access, coherentScope> buffer, int32_t byteOffset16ByteAligned = 0)
     {
-        let pointer = Ptr<T[]>(buffer);
+        let pointer = Ptr<T[], AddressSpace::UserPointer, access, coherentScope>(buffer);
         let alignment = 16;
-        return spirv_asm
+        if (coherentScope == CoherentScope::NotCoherent)
         {
-            result:$$CoopVec<T, N> = OpCooperativeVectorLoadNV $pointer $byteOffset16ByteAligned Aligned !alignment;
-        };
+            return spirv_asm
+            {
+                result:$$CoopVec<T, N> = OpCooperativeVectorLoadNV $pointer $byteOffset16ByteAligned Aligned !alignment;
+            };
+        }
+        else
+        {
+            const int32_t scope = (int32_t)coherentScope;
+            return spirv_asm
+            {
+                result:$$CoopVec<T, N> = OpCooperativeVectorLoadNV $pointer $byteOffset16ByteAligned Aligned|MakePointerVisible|NonPrivatePointer !alignment $scope;
+            };
+        }
+
     }
 
     // Groupshared
@@ -26174,7 +26244,7 @@ CoopVec<T, N> coopVecLoad<let N : int, T : __BuiltinArithmeticType>(RWStructured
 
 [ForceInline]
 [require(spirv, cooperative_vector)]
-CoopVec<T, N> coopVecLoad<let N : int, T : __BuiltinArithmeticType>(T* buffer, int32_t byteOffset16ByteAligned = 0)
+CoopVec<T, N> coopVecLoad<let N : int, T : __BuiltinArithmeticType, let access : Access, let coherentScope : CoherentScope>(Ptr<T, AddressSpace::UserPointer, access, coherentScope> buffer, int32_t byteOffset16ByteAligned = 0)
 {
     return CoopVec<T, N>.load(buffer, byteOffset16ByteAligned);
 }

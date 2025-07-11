@@ -1785,6 +1785,10 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
                 SLANG_ASSERT(ptrType);
                 if (ptrType->hasAddressSpace())
                     storageClass = addressSpaceToStorageClass(ptrType->getAddressSpace());
+                
+                if (m_memoryModel == SpvMemoryModelVulkan &&
+                    ptrType->getCoherentScope() == CoherentScope::Device)
+                    requireSPIRVCapability(SpvCapabilityVulkanMemoryModelDeviceScope);
 
                 switch (storageClass)
                 {

@@ -2951,7 +2951,7 @@ IRPtrType* IRBuilder::getPtrType(
         valueType,
         getIntValue(getUInt64Type(), static_cast<IRIntegerValue>(addressSpace)),
         getIntValue(getUInt64Type(), static_cast<IRIntegerValue>(accessQualifier)),
-        getIntValue(getUInt64Type(), static_cast<IRIntegerValue>(coherentScope)));
+        getIntValue(getIntType(), static_cast<IRIntegerValue>(coherentScope)));
 }
 
 IRPtrType* IRBuilder::getPtrType(
