@@ -1351,9 +1351,9 @@ __intrinsic_type($(kIROp_PtrType))
 struct Ptr
 {
     // A user is allowed to explicitly cast between any pointer type.
-    __generic<U, addrSpaceOther, Access accessOther, CoherentScope coherentScopeOther>
+    __generic<U, Access accessOther, CoherentScope coherentScopeOther>
     __intrinsic_op($(kIROp_BitCast))
-    __init(Ptr<U, addrSpaceOther, accessOther, coherentScopeOther> ptr);
+    __init(Ptr<U, addrSpace, accessOther, coherentScopeOther> ptr);
 
     __intrinsic_op($(kIROp_CastIntToPtr))
     __init(uint64_t val);
