@@ -1513,15 +1513,20 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
         }
     }
 
-    bool NeedToUseCoherentLoadOrStore(IRInst* pointer)
+    CoherentScope NeedToUseCoherentLoadOrStore(IRInst* pointer)
     {
         if (m_memoryModel != SpvMemoryModelVulkan)
-            return false;
+            return CoherentScope::NotCoherent;
 
         auto ptrType = as<IRPtrTypeBase>(pointer->getFullType());
         if (!ptrType)
-            return false;
+            return CoherentScope::NotCoherent;
 
+        // New coherent logic:
+        if (ptrType->getCoherentScope() != CoherentScope::NotCoherent)
+            return ptrType->getCoherentScope();
+
+        // Legacy coherent logic:
         SpvStorageClass storageClass = SpvStorageClassFunction;
         if (ptrType->hasAddressSpace())
             storageClass = addressSpaceToStorageClass(ptrType->getAddressSpace());
@@ -1538,7 +1543,7 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
         case SpvStorageClassStorageBuffer:
             break;
         default:
-            return false;
+            return CoherentScope::NotCoherent;
         }
 
         IRInst* baseObj = pointer;
@@ -1557,7 +1562,7 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
         }
 
         if (baseObj == nullptr)
-            return false;
+            return CoherentScope::NotCoherent;
 
         for (auto decoration : baseObj->getDecorations())
         {
@@ -1567,11 +1572,11 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
                 IRIntegerValue flags = collection->getMemoryQualifierBit();
                 if (flags & MemoryQualifierSetModifier::Flags::kCoherent)
                 {
-                    return true;
+                    return CoherentScope::Device;
                 }
             }
         }
-        return false;
+        return CoherentScope::NotCoherent;
     }
 
     bool NeedToUseCoherentImageLoadOrStore(IRInst* image)
@@ -4431,7 +4436,7 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
                 }
                 else
                 {
-                    result = emitStoreMaybeCoherent(parent, inst);
+                    result = emitStore(parent, inst);
                 }
             }
             break;
@@ -4459,7 +4464,8 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
                 }
                 else
                 {
-                    result = emitStoreMaybeCoherent(parent, inst);
+                    // This seems wrong, we should never be treating a coherent op as an atomic equivlent
+                    result = emitStore(parent, inst);
                 }
             }
             break;
@@ -6977,14 +6983,15 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
         IRBuilder builder{inst};
         builder.setInsertBefore(inst);
 
-        SpvInst* deviceScope = nullptr;
+        SpvInst* coherentScope = nullptr;
         IRInst* pointer = inst->getOperand(0);
 
-        bool coherentPointer = NeedToUseCoherentLoadOrStore(pointer);
-        if (coherentPointer)
+        CoherentScope coherentScopeToUse = NeedToUseCoherentLoadOrStore(pointer);
+        if (coherentScopeToUse != CoherentScope::NotCoherent)
         {
-            requireSPIRVCapability(SpvCapabilityVulkanMemoryModelDeviceScope);
-            deviceScope = emitIntConstant(IRIntegerValue{SpvScopeDevice}, builder.getUIntType());
+            if (coherentScopeToUse == CoherentScope::Device)
+                requireSPIRVCapability(SpvCapabilityVulkanMemoryModelDeviceScope);
+            coherentScope = emitIntConstant(IRIntegerValue(coherentScopeToUse), builder.getIntType());
         }
 
         return emitInstCustomOperandFunc(
@@ -6997,21 +7004,43 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
                 emitOperand(kResultID);
                 emitOperand(pointer);
 
-                if (coherentPointer)
+                if (coherentScope)
                 {
                     emitOperand(
                         SpvMemoryAccessMakePointerVisibleMask |
                         SpvMemoryAccessNonPrivatePointerMask);
 
-                    emitOperand(deviceScope);
+                    emitOperand(coherentScope);
                 }
             });
     }
 
-    SpvInst* emitStore(SpvInstParent* parent, IRStore* inst)
+    SpvInst* emitStore(SpvInstParent* parent, IRInst* inst)
     {
-        auto ptrType = as<IRPtrTypeBase>(inst->getPtr()->getDataType());
-        if (ptrType && addressSpaceToStorageClass(ptrType->getAddressSpace()) ==
+        IRInst* pointer = inst->getOperand(0);
+        auto ptrType = as<IRPtrTypeBase>(pointer->getDataType());
+        IRInst* object = inst->getOperand(1);
+        SLANG_ASSERT(ptrType);
+
+        uint32_t memoryMask = SpvMemoryAccessMask::SpvMemoryAccessMaskNone;
+        SpvLiteralInteger alignment{};
+        SpvInst* coherentScope = nullptr;
+        CoherentScope coherentScopeToUse = NeedToUseCoherentLoadOrStore(pointer);
+        
+        IRBuilder builder{inst};
+        builder.setInsertBefore(inst);
+
+        if (coherentScopeToUse != CoherentScope::NotCoherent)
+        {
+            if (coherentScopeToUse == CoherentScope::Device)
+                requireSPIRVCapability(SpvCapabilityVulkanMemoryModelDeviceScope);
+            coherentScope =
+                emitIntConstant(IRIntegerValue(coherentScopeToUse), builder.getIntType());
+            memoryMask |=
+                SpvMemoryAccessMakePointerAvailableMask | SpvMemoryAccessNonPrivatePointerMask;
+        }
+
+        if (addressSpaceToStorageClass(ptrType->getAddressSpace()) ==
                            SpvStorageClassPhysicalStorageBuffer)
         {
             IRSizeAndAlignment sizeAndAlignment;
@@ -7026,33 +7055,8 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
                     ptrType->getValueType(),
                     &sizeAndAlignment);
             }
-            return emitOpStoreAligned(
-                parent,
-                inst,
-                inst->getPtr(),
-                inst->getVal(),
-                SpvLiteralInteger::from32(sizeAndAlignment.alignment));
-        }
-        else
-        {
-            return emitStoreMaybeCoherent(parent, inst);
-        }
-    }
-
-    SpvInst* emitStoreMaybeCoherent(SpvInstParent* parent, IRInst* inst)
-    {
-        IRBuilder builder{inst};
-        builder.setInsertBefore(inst);
-
-        SpvInst* deviceScope = nullptr;
-        IRInst* pointer = inst->getOperand(0);
-        IRInst* object = inst->getOperand(1);
-
-        bool coherentPointer = NeedToUseCoherentLoadOrStore(pointer);
-        if (coherentPointer)
-        {
-            requireSPIRVCapability(SpvCapabilityVulkanMemoryModelDeviceScope);
-            deviceScope = emitIntConstant(IRIntegerValue{SpvScopeDevice}, builder.getUIntType());
+            memoryMask |= SpvMemoryAccessAlignedMask;
+            alignment = SpvLiteralInteger::from32(sizeAndAlignment.alignment);
         }
 
         return emitInstCustomOperandFunc(
@@ -7063,15 +7067,11 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
             {
                 emitOperand(pointer);
                 emitOperand(object);
-
-                if (coherentPointer)
-                {
-                    emitOperand(
-                        SpvMemoryAccessMakePointerAvailableMask |
-                        SpvMemoryAccessNonPrivatePointerMask);
-
-                    emitOperand(deviceScope);
-                }
+                emitOperand(memoryMask);
+                if (memoryMask & SpvMemoryAccessMask::SpvMemoryAccessAlignedMask)
+                    emitOperand(alignment);
+                if (memoryMask & SpvMemoryAccessMask::SpvMemoryAccessMakePointerAvailableMask)
+                    emitOperand(coherentScope);
             });
     }
 
@@ -8238,7 +8238,7 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
         // The ordinary case is the debug variable has a backing ordinary variable.
         // We can simply emit a store into the backing variable for the DebugValue operation.
         //
-        return emitStoreMaybeCoherent(parent, debugValue);
+        return emitStore(parent, debugValue);
     }
 
     IRInst* getName(IRInst* inst)

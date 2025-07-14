@@ -2252,6 +2252,15 @@ struct SPIRVLegalizationContext : public SourceEmitterBase
             {
                 textureFootprintTypes.add(globalInst);
             }
+            else if (auto ptrType = as<IRPtrType>(globalInst))
+            {
+                if (ptrType->getCoherentScope() != CoherentScope::NotCoherent)
+                {
+                    // A user needs to explicitly use coherent operations to access them.
+                    // If this is done we must enable VMM
+                    m_sharedContext->m_memoryModel = SpvMemoryModelVulkan;
+                }
+            }
         }
         for (auto t : instsToProcess)
         {
