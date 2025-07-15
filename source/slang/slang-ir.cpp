@@ -2900,21 +2900,19 @@ IRInOutType* IRBuilder::getInOutType(IRType* valueType)
 
 IRRefType* IRBuilder::getRefType(
     IRType* valueType,
-    AddressSpace addrSpace,
     AccessQualifier accessQualifier,
-    CoherentScope coherentScope)
+    AddressSpace addrSpace)
 {
     return (
-        IRRefType*)getPtrType(kIROp_RefType, valueType, addrSpace, accessQualifier, coherentScope);
+        IRRefType*)getPtrType(kIROp_RefType, valueType, accessQualifier, addrSpace);
 }
 
 IRConstRefType* IRBuilder::getConstRefType(
     IRType* valueType,
-    AddressSpace addrSpace,
     AccessQualifier accessQualifier,
-    CoherentScope coherentScope)
+    AddressSpace addrSpace)
 {
-    return (IRConstRefType*)getPtrType(kIROp_ConstRefType, valueType, addrSpace, accessQualifier, coherentScope);
+    return (IRConstRefType*)getPtrType(kIROp_ConstRefType, valueType, accessQualifier, addrSpace);
 }
 
 IRSPIRVLiteralType* IRBuilder::getSPIRVLiteralType(IRType* type)
@@ -2936,37 +2934,34 @@ IRPtrTypeBase* IRBuilder::getPtrTypeWithAddressSpace(
     if (ptrWithAddrSpace->hasAddressSpace())
         return (IRPtrTypeBase*)getPtrType(
             ptrWithAddrSpace->getOp(),
-            valueType,
-            ptrWithAddrSpace->getAddressSpace(),
+            valueType,           
             ptrWithAddrSpace->getAccessQualifier(),
-            ptrWithAddrSpace->getCoherentScope());
+            ptrWithAddrSpace->getAddressSpace());
     return (IRPtrTypeBase*)getPtrType(ptrWithAddrSpace->getOp(), valueType);
 }
 
 IRPtrType* IRBuilder::getPtrType(
     IROp op,
     IRType* valueType,
-    AddressSpace addressSpace,
     AccessQualifier accessQualifier,
-    CoherentScope coherentScope)
+    AddressSpace addressSpace)
 {
     return (IRPtrType*)getPtrType(
         op,
         valueType,
-        getIntValue(getUInt64Type(), static_cast<IRIntegerValue>(addressSpace)),
         getIntValue(getUInt64Type(), static_cast<IRIntegerValue>(accessQualifier)),
-        getIntValue(getUInt64Type(), static_cast<IRIntegerValue>(coherentScope)));
+        getIntValue(getUInt64Type(), static_cast<IRIntegerValue>(addressSpace))
+    );
 }
 
 IRPtrType* IRBuilder::getPtrType(
     IROp op,
     IRType* valueType,
     IRInst* addressSpace,
-    IRInst* accessQualifier,
-    IRInst* coherentScope)
+    IRInst* accessQualifier)
 {
-    IRInst* operands[] = {valueType, addressSpace, accessQualifier, coherentScope};
-    return (IRPtrType*)getType(op, addressSpace ? 4 : 1, operands);
+    IRInst* operands[] = {valueType, accessQualifier, addressSpace};
+    return (IRPtrType*)getType(op, addressSpace ? 3 : 1, operands);
 }
 
 IRTextureTypeBase* IRBuilder::getTextureType(
@@ -4807,7 +4802,7 @@ IRGlobalVar* IRBuilder::createGlobalVar(IRType* valueType)
 
 IRGlobalVar* IRBuilder::createGlobalVar(IRType* valueType, AddressSpace addressSpace)
 {
-    auto ptrType = getPtrType(kIROp_PtrType, valueType, addressSpace);
+    auto ptrType = getPtrType(kIROp_PtrType, valueType, AccessQualifier::ReadWrite, addressSpace);
     IRGlobalVar* globalVar = createInst<IRGlobalVar>(this, kIROp_GlobalVar, ptrType);
     _maybeSetSourceLoc(globalVar);
     addGlobalValue(this, globalVar);
@@ -5064,7 +5059,7 @@ IRVar* IRBuilder::emitVar(IRType* type)
 
 IRVar* IRBuilder::emitVar(IRType* type, AddressSpace addressSpace)
 {
-    auto allocatedType = getPtrType(kIROp_PtrType, type, addressSpace);
+    auto allocatedType = getPtrType(kIROp_PtrType, type, AccessQualifier::ReadWrite, addressSpace);
     auto inst = createInst<IRVar>(this, kIROp_Var, allocatedType);
     addInst(inst);
     return inst;
@@ -5293,9 +5288,8 @@ IRType* maybePropagateAddressSpace(IRBuilder* builder, IRInst* basePtr, IRType* 
                 type = builder->getPtrType(
                     resultPtrType->getOp(),
                     resultPtrType->getValueType(),
-                    basePtrType->getAddressSpace(),
                     basePtrType->getAccessQualifier(),
-                    basePtrType->getCoherentScope());
+                    basePtrType->getAddressSpace());
             }
         }
     }
@@ -5306,12 +5300,10 @@ IRInst* IRBuilder::emitFieldAddress(IRInst* basePtr, IRInst* fieldKey)
 {
     AddressSpace addrSpace = AddressSpace::Generic;
     AccessQualifier accessQualifier = AccessQualifier::ReadWrite;
-    CoherentScope coherentScope = CoherentScope::NotCoherent;
     IRInst* valueType = nullptr;
     auto basePtrType = unwrapAttributedType(basePtr->getDataType());
     if (auto ptrType = as<IRPtrTypeBase>(basePtrType))
     {
-        coherentScope = ptrType->getCoherentScope();
         accessQualifier = ptrType->getAccessQualifier();
         addrSpace = ptrType->getAddressSpace();
         valueType = ptrType->getValueType();
@@ -5336,7 +5328,7 @@ IRInst* IRBuilder::emitFieldAddress(IRInst* basePtr, IRInst* fieldKey)
     }
     SLANG_RELEASE_ASSERT(resultType);
     return emitFieldAddress(
-        getPtrType(kIROp_PtrType, resultType, addrSpace, accessQualifier, coherentScope),
+        getPtrType(kIROp_PtrType, resultType, accessQualifier, addrSpace),
         basePtr,
         fieldKey);
 }
@@ -5443,12 +5435,10 @@ IRInst* IRBuilder::emitElementAddress(IRInst* basePtr, IRInst* index)
 {
     AddressSpace addrSpace = AddressSpace::Generic;
     AccessQualifier accessQualifier = AccessQualifier::ReadWrite;
-    CoherentScope coherentScope = CoherentScope::NotCoherent;
     IRInst* valueType = nullptr;
     auto basePtrType = unwrapAttributedType(basePtr->getDataType());
     if (auto ptrType = as<IRPtrTypeBase>(basePtrType))
     {
-        coherentScope = ptrType->getCoherentScope();
         accessQualifier = ptrType->getAccessQualifier();
         addrSpace = ptrType->getAddressSpace();
         valueType = ptrType->getValueType();
@@ -5498,7 +5488,7 @@ IRInst* IRBuilder::emitElementAddress(IRInst* basePtr, IRInst* index)
     auto inst = createInst<IRGetElementPtr>(
         this,
         kIROp_GetElementPtr,
-        getPtrType(kIROp_PtrType, type, addrSpace, accessQualifier, coherentScope),
+        getPtrType(kIROp_PtrType, type, accessQualifier, addrSpace),
         basePtr,
         index);
 

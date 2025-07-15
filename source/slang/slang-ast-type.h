@@ -679,9 +679,8 @@ class PtrTypeBase : public BuiltinType
     FIDDLE(...)
     // Get the type of the pointed-to value.
     Type* getValueType();
-    Val* getAddressSpace();
     Val* getAccessQualifier();
-    Val* getCoherentScope();
+    Val* getAddressSpace();
 };
 
 FIDDLE()

@@ -748,9 +748,8 @@ Type* getParamTypeWithDirectionWrapper(ASTBuilder* astBuilder, DeclRef<VarDeclBa
     case kParameterDirection_ConstRef:
         return astBuilder->getConstRefType(
             result,
-            AddressSpace::Generic,
             AccessQualifier::ReadWrite,
-            CoherentScope::NotCoherent);
+            AddressSpace::Generic);
     case kParameterDirection_Out:
         return astBuilder->getOutType(result);
     case kParameterDirection_InOut:
@@ -758,9 +757,8 @@ Type* getParamTypeWithDirectionWrapper(ASTBuilder* astBuilder, DeclRef<VarDeclBa
     case kParameterDirection_Ref:
         return astBuilder->getRefType(
             result,
-            AddressSpace::Generic,
             AccessQualifier::ReadWrite,
-            CoherentScope::NotCoherent);
+            AddressSpace::Generic);
     default:
         return result;
     }

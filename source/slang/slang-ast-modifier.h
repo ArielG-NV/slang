@@ -573,7 +573,7 @@ class MagicTypeModifier : public Modifier
     FIDDLE() uint32_t tag = uint32_t(0);
 };
 
-// A modifier that indicates a built-in enum type (e.g., `CoherentScope`).
+// A modifier that indicates a built-in enum type (e.g., `Access`).
 // This allows the Slang frontend to be aware of and efficently generate
 // EnumCase nodes.
 FIDDLE()

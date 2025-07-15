@@ -509,9 +509,8 @@ public:
     // is looked up as a builtin type.
     PtrType* getPtrType(
         Type* valueType,
-        AddressSpace addrSpace,
-        AccessQualifier accessQualifier,
-        CoherentScope coherentScope);
+        AccessQualifier accessQualifier, 
+        AddressSpace addrSpace);
 
     // Construct the type `Out<valueType>`
     OutType* getOutType(Type* valueType);
@@ -522,16 +521,14 @@ public:
     // Construct the type `Ref<valueType>`
     RefType* getRefType(
         Type* valueType,
-        AddressSpace addrSpace,
-        AccessQualifier accessQualifier,
-        CoherentScope coherentScope);
+        AccessQualifier accessQualifier, 
+        AddressSpace addrSpace);
 
     // Construct the type `ConstRef<valueType>`
     ConstRefType* getConstRefType(
         Type* valueType,
-        AddressSpace addrSpace,
-        AccessQualifier accessQualifier,
-        CoherentScope coherentScope);
+        AccessQualifier accessQualifier, 
+        AddressSpace addrSpace);
 
     // Construct the type `Optional<valueType>`
     OptionalType* getOptionalType(Type* valueType);
@@ -541,9 +538,8 @@ public:
     PtrTypeBase* getPtrType(Type* valueType, char const* ptrTypeName);
     PtrTypeBase* getPtrType(
         Type* valueType,
+        AccessQualifier accessQualifier, 
         AddressSpace addrSpace,
-        AccessQualifier accessQualifier,
-        CoherentScope coherentScope,
         char const* ptrTypeName);
 
     ArrayExpressionType* getArrayType(Type* elementType, IntVal* elementCount);

@@ -1704,30 +1704,23 @@ struct IRPtrTypeBase : IRType
     FIDDLE(baseInst())
     IRType* getValueType() { return (IRType*)getOperand(0); }
 
-    bool hasAddressSpace()
-    {
-        return getOperandCount() > 1 && getAddressSpace() != AddressSpace::Generic;
-    }
-
-    AddressSpace getAddressSpace()
-    {
-        return getOperandCount() > 1
-                   ? (AddressSpace) static_cast<IRIntLit*>(getOperand(1))->getValue()
-                   : AddressSpace::Generic;
-    }
-
     AccessQualifier getAccessQualifier()
     {
-        return getOperandCount() > 2
-                   ? (AccessQualifier) static_cast<IRIntLit*>(getOperand(2))->getValue()
+        return getOperandCount() > 1
+                   ? (AccessQualifier) static_cast<IRIntLit*>(getOperand(1))->getValue()
                    : AccessQualifier::ReadWrite;
     }
 
-    CoherentScope getCoherentScope()
+    bool hasAddressSpace()
     {
-        return getOperandCount() > 3
-                   ? (CoherentScope) static_cast<IRIntLit*>(getOperand(3))->getValue()
-                   : CoherentScope::NotCoherent;
+        return getOperandCount() > 2 && getAddressSpace() != AddressSpace::Generic;
+    }
+    
+    AddressSpace getAddressSpace()
+    {
+        return getOperandCount() > 2
+                   ? (AddressSpace) static_cast<IRIntLit*>(getOperand(2))->getValue()
+                   : AddressSpace::Generic;
     }
 };
 

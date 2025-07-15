@@ -1309,6 +1309,7 @@ enum AddressSpace : uint64_t
 };
 
 // https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#_scope_id
+__builtin_enum(MemoryScope)
 enum MemoryScope : int32_t
 {
     CrossDevice = $( (int32_t)MemoryScope::CrossDevice),
@@ -1319,19 +1320,6 @@ enum MemoryScope : int32_t
     QueueFamily = $( (int32_t)MemoryScope::QueueFamily),
     ShaderCall = $( (int32_t)MemoryScope::ShaderCall),
     ShaderCallKHR = $( (int32_t)MemoryScope::ShaderCall),
-}
-
-__builtin_enum(CoherentScope)
-enum CoherentScope : int32_t
-{
-    NotCoherent = $( (int32_t)CoherentScope::NotCoherent),
-    CrossDevice = $( (int32_t)CoherentScope::CrossDevice),
-    Device = $( (int32_t)CoherentScope::Device),
-    Workgroup = $( (int32_t)CoherentScope::Workgroup),
-    Subgroup = $( (int32_t)CoherentScope::Subgroup),
-    Invocation = $( (int32_t)CoherentScope::Invocation),
-    QueueFamily = $( (int32_t)CoherentScope::QueueFamily),
-    ShaderCall = $( (int32_t)CoherentScope::ShaderCall),
 }
 
 __builtin_enum(Access)
@@ -1345,15 +1333,15 @@ enum Access : uint64_t
 /// Represents a pointer type.
 /// @param T The type of the value pointed to.
 /// @remarks `T* val` is equivalent to `Ptr<T> val`.
-__generic<T, AddressSpace addrSpace = AddressSpace::UserPointer, Access access = Access::ReadWrite, CoherentScope coherentScope = CoherentScope::NotCoherent>
+__generic<T, Access access = Access::ReadWrite, AddressSpace addrSpace = AddressSpace::UserPointer>
 __magic_type(PtrType)
 __intrinsic_type($(kIROp_PtrType))
 struct Ptr
 {
     // A user is allowed to explicitly cast between any pointer type.
-    __generic<U, Access accessOther, CoherentScope coherentScopeOther>
+    __generic<U, Access accessOther>
     __intrinsic_op($(kIROp_BitCast))
-    __init(Ptr<U, addrSpace, accessOther, coherentScopeOther> ptr);
+    __init(Ptr<U, accessOther, addrSpace> ptr);
 
     __intrinsic_op($(kIROp_CastIntToPtr))
     __init(uint64_t val);
@@ -1370,8 +1358,6 @@ struct Ptr
         ref;
     }
 };
-
-typealias CoherentPtr<T, Access access = Access::ReadWrite> = Ptr<T, AddressSpace::UserPointer, access, CoherentScope::Device>;
 
 //@hidden:
 __intrinsic_op($(kIROp_AlignedAttr))
@@ -1416,11 +1402,11 @@ void storeAligned<int alignment, T>(T* ptr, T value)
 
 ${{{
     StringBuilder ptrTypeParameterList;
-    ptrTypeParameterList << "T, AddressSpace addrSpace, Access access, CoherentScope coherentScope";
+    ptrTypeParameterList << "T, Access access, AddressSpace addrSpace";
     String ptrArgListDef = ptrTypeParameterList.toString();
 
     StringBuilder ptrArgListBuilder;
-    ptrArgListBuilder << "T, addrSpace, access, coherentScope";
+    ptrArgListBuilder << "T, access, addrSpace";
     String ptrArgList = ptrArgListBuilder.toString();
 
     StringBuilder fullPtrTypeBuilder;
@@ -1550,7 +1536,7 @@ __intrinsic_type($(kIROp_ConstRefType))
 struct ConstRef
 {};
 
-typealias __Addr<T> = Ptr<T, AddressSpace::Generic>;
+typealias __Addr<T> = Ptr<T, Access::ReadWrite, AddressSpace::Generic>;
 
 //@public:
 
@@ -2687,10 +2673,10 @@ __intrinsic_op(0)
 [require(cpp_cuda_spirv)]
 __prefix Ref<T> operator*($(fullPtrType) value);
 
-__generic<T, AddressSpace addrSpace, Access accessQualifier, CoherentScope coherentScope>
-__intrinsic_op(0)
+__generic<T, Access accessQualifier, AddressSpace addrSpace>
+__intrinsic_op( 0)
 [require(cpp_cuda_spirv)]
-__prefix Ptr<T, addrSpace, accessQualifier, coherentScope> operator&(__ref T value);
+__prefix Ptr<T, accessQualifier, addrSpace> operator&(__ref T value);
 
 __generic<T>
 __intrinsic_op(0)
@@ -4369,7 +4355,7 @@ __attributeTarget(FuncDecl)
 attribute_syntax [RequireFullQuads] : RequireFullQuadsAttribute;
 
 __generic<T>
-typealias NodePayloadPtr = Ptr<T, AddressSpace::NodePayloadAMDX>;
+typealias NodePayloadPtr = Ptr<T, Access::ReadWrite, AddressSpace::NodePayloadAMDX>;
 
 __attributeTarget(StructDecl)
 attribute_syntax [raypayload] : RayPayloadAttribute;

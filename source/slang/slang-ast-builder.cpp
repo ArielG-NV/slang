@@ -298,12 +298,11 @@ Type* ASTBuilder::getSpecializedBuiltinType(ArrayView<Val*> genericArgs, const c
 
 PtrType* ASTBuilder::getPtrType(
     Type* valueType,
-    AddressSpace addrSpace,
     AccessQualifier accessQualifier,
-    CoherentScope coherentScope)
+    AddressSpace addrSpace)
 {
     return dynamicCast<PtrType>(
-        getPtrType(valueType, addrSpace, accessQualifier, coherentScope, "PtrType"));
+        getPtrType(valueType, accessQualifier, addrSpace, "PtrType"));
 }
 
 Type* ASTBuilder::getDefaultLayoutType()
@@ -342,22 +341,20 @@ InOutType* ASTBuilder::getInOutType(Type* valueType)
 
 RefType* ASTBuilder::getRefType(
     Type* valueType,
-    AddressSpace addrSpace,
     AccessQualifier accessQualifier,
-    CoherentScope coherentScope)
+    AddressSpace addrSpace)
 {
     return dynamicCast<RefType>(
-        getPtrType(valueType, addrSpace, accessQualifier, coherentScope, "RefType"));
+        getPtrType(valueType, accessQualifier, addrSpace, "RefType"));
 }
 
 ConstRefType* ASTBuilder::getConstRefType(
     Type* valueType,
-    AddressSpace addrSpace,
     AccessQualifier accessQualifier,
-    CoherentScope coherentScope)
+    AddressSpace addrSpace)
 {
     return dynamicCast<ConstRefType>(
-        getPtrType(valueType, addrSpace, accessQualifier, coherentScope, "ConstRefType"));
+        getPtrType(valueType, accessQualifier, addrSpace, "ConstRefType"));
 }
 
 OptionalType* ASTBuilder::getOptionalType(Type* valueType)
@@ -373,22 +370,19 @@ PtrTypeBase* ASTBuilder::getPtrType(Type* valueType, char const* ptrTypeName)
 
 PtrTypeBase* ASTBuilder::getPtrType(
     Type* valueType,
-    AddressSpace addrSpace,
     AccessQualifier accessQualifier,
-    CoherentScope coherentScope,
+    AddressSpace addrSpace,
     char const* ptrTypeName)
 {
     Val* args[] = {
         valueType,
         getIntVal(
-            DeclRefType::create(this, getSharedASTBuilder()->getBuiltinEnum("AddressSpace")),
-            (IntegerLiteralValue)addrSpace),
-        getIntVal(
             DeclRefType::create(this, getSharedASTBuilder()->getBuiltinEnum("Access")),
             (IntegerLiteralValue)accessQualifier),
         getIntVal(
-            DeclRefType::create(this, getSharedASTBuilder()->getBuiltinEnum("CoherentScope")),
-            (IntegerLiteralValue)coherentScope)};
+            DeclRefType::create(this, getSharedASTBuilder()->getBuiltinEnum("AddressSpace")),
+            (IntegerLiteralValue)addrSpace)
+    };
     return as<PtrTypeBase>(getSpecializedBuiltinType(makeArrayView(args), ptrTypeName));
 }
 

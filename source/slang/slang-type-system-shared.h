@@ -128,19 +128,6 @@ enum class MemoryScope : int32_t
     ShaderCall = 6,
 };
 
-// must be 32 bit to match SPIR-V
-enum class CoherentScope : int32_t
-{
-    NotCoherent = 0xFF,
-    CrossDevice = (int32_t)MemoryScope::CrossDevice,
-    Device = (int32_t)MemoryScope::Device,
-    Workgroup = (int32_t)MemoryScope::Workgroup,
-    Subgroup = (int32_t)MemoryScope::Subgroup,
-    Invocation = (int32_t)MemoryScope::Invocation,
-    QueueFamily = (int32_t)MemoryScope::QueueFamily,
-    ShaderCall = (int32_t)MemoryScope::ShaderCall,
-};
-
 enum class AccessQualifier : uint64_t
 {
     ReadWrite = 0,
