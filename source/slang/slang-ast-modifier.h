@@ -1963,7 +1963,7 @@ class NoSideEffectAttribute : public Attribute
     FIDDLE(...)
 };
 
-/// A `[KnownBuiltin("name")]` attribute allows the compiler to
+/// A `[KnownBuiltin(name)]` attribute allows the compiler to
 /// identify this declaration during compilation, despite obfuscation or
 /// linkage removing optimizations
 ///
@@ -1971,7 +1971,7 @@ FIDDLE()
 class KnownBuiltinAttribute : public Attribute
 {
     FIDDLE(...)
-    FIDDLE() String name;
+    FIDDLE() IntVal* name;
 };
 
 /// A modifier that applies to types rather than declarations.
