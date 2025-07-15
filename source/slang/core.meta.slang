@@ -2682,6 +2682,7 @@ __prefix Ptr<T> operator&(__ref T value);
 
 __generic<T>
 __intrinsic_op(0)
+[KnownBuiltin($( (int)KnownBuiltinDeclName::OperatorAddressOf))]
 [require(cpp_cuda_spirv)]
 __Addr<T> __get_addr(__ref T value);
 
