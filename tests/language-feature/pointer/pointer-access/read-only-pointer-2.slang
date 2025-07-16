@@ -8,7 +8,7 @@
 RWStructuredBuffer<int> processMemory;
 RWStructuredBuffer<int> output;
 
-typealias ReadPtr = int, Access::Read, AddressSpace::UserPointer>;
+typealias ReadPtr = Ptr<int, Access::Read, AddressSpace::UserPointer>;
 
 void writeToReadOnlyPointer(ReadPtr<int> ptr)
 {
