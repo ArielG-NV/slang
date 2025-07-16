@@ -2957,8 +2957,8 @@ IRPtrType* IRBuilder::getPtrType(
 IRPtrType* IRBuilder::getPtrType(
     IROp op,
     IRType* valueType,
-    IRInst* addressSpace,
-    IRInst* accessQualifier)
+    IRInst* accessQualifier,
+    IRInst* addressSpace)
 {
     IRInst* operands[] = {valueType, accessQualifier, addressSpace};
     return (IRPtrType*)getType(op, addressSpace ? 3 : 1, operands);

@@ -2672,11 +2672,10 @@ __generic<$(ptrArgListDef)>
 __intrinsic_op(0)
 [require(cpp_cuda_spirv)]
 __prefix Ref<T> operator*($(fullPtrType) value);
-
-__generic<T, Access accessQualifier, AddressSpace addrSpace>
-__intrinsic_op( 0)
+__generic<T>
+__intrinsic_op(0)
 [require(cpp_cuda_spirv)]
-__prefix Ptr<T, accessQualifier, addrSpace> operator&(__ref T value);
+__prefix Ptr<T, Access::ReadWrite, AddressSpace::UserPointer> operator&(__ref T value);
 
 __generic<T>
 __intrinsic_op(0)
@@ -2689,7 +2688,7 @@ $(fullPtrType) operator+($(fullPtrType) value, int64_t offset);
 
 __generic<$(ptrArgListDef)>
 [__unsafeForceInlineEarly]
-$(fullPtrType) operator -($(fullPtrType) value, int64_t offset)
+$(fullPtrType) operator-($(fullPtrType) value, int64_t offset)
 {
     return __getOffsetPtr(value, -offset);
 }
