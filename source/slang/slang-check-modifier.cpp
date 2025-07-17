@@ -1659,19 +1659,6 @@ Modifier* SemanticsVisitor::checkModifier(
         //
 
         auto checkedAttr = checkAttribute(hlslUncheckedAttribute, syntaxNode);
-
-        if (auto unscopedEnumAttr = as<UnscopedEnumAttribute>(checkedAttr))
-        {
-            auto transparentModifier = getASTBuilder()->create<TransparentModifier>();
-            if (auto parentDecl = getParentDecl(as<Decl>(syntaxNode)))
-            {
-                parentDecl
-                    ->_invalidateLookupAcceleratorsBecauseUnscopedEnumAttributeWillBeTurnedIntoTransparentModifier(
-                        unscopedEnumAttr,
-                        transparentModifier);
-            }
-            return transparentModifier;
-        }
         return checkedAttr;
     }
 
