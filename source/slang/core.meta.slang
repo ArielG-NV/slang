@@ -2672,10 +2672,13 @@ __generic<$(ptrArgListDef)>
 __intrinsic_op(0)
 [require(cpp_cuda_spirv)]
 __prefix Ref<T> operator*($(fullPtrType) value);
+
+// Cannot infer generic from use-site, therefore only T can be 
+// used in the generic parameter list.
 __generic<T>
 __intrinsic_op(0)
 [require(cpp_cuda_spirv)]
-__prefix Ptr<T, Access::ReadWrite, AddressSpace::UserPointer> operator&(__ref T value);
+__prefix Ptr<T> operator&(__ref T value);
 
 __generic<T>
 __intrinsic_op(0)

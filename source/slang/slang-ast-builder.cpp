@@ -348,13 +348,9 @@ RefType* ASTBuilder::getRefType(
         getPtrType(valueType, accessQualifier, addrSpace, "RefType"));
 }
 
-ConstRefType* ASTBuilder::getConstRefType(
-    Type* valueType,
-    AccessQualifier accessQualifier,
-    AddressSpace addrSpace)
+ConstRefType* ASTBuilder::getConstRefType(Type* valueType)
 {
-    return dynamicCast<ConstRefType>(
-        getPtrType(valueType, accessQualifier, addrSpace, "ConstRefType"));
+    return dynamicCast<ConstRefType>(getPtrType(valueType, "ConstRefType"));
 }
 
 OptionalType* ASTBuilder::getOptionalType(Type* valueType)

@@ -525,10 +525,7 @@ public:
         AddressSpace addrSpace);
 
     // Construct the type `ConstRef<valueType>`
-    ConstRefType* getConstRefType(
-        Type* valueType,
-        AccessQualifier accessQualifier, 
-        AddressSpace addrSpace);
+    ConstRefType* getConstRefType(Type* valueType);
 
     // Construct the type `Optional<valueType>`
     OptionalType* getOptionalType(Type* valueType);
