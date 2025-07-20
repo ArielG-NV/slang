@@ -5753,6 +5753,13 @@ Val* SemanticsExprVisitor::checkTypeModifier(Modifier* modifier, Type* type)
     {
         return m_astBuilder->getNoDiffModifierVal();
     }
+    else if (as<ConstModifier>(modifier))
+    {
+        getSink()->diagnose(
+            modifier,
+            Diagnostics::disallowConstAsTypeModifier);
+        return nullptr;
+    }
     else
     {
         // TODO: more complete error message here

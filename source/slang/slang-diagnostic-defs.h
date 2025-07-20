@@ -533,6 +533,16 @@ DIAGNOSTIC(
     Error,
     missingLayoutBindingModifier,
     "Expecting 'binding' modifier in the layout qualifier here")
+DIAGNOSTIC(
+    20017,
+    Error,
+    disallowConstAsModifierOfCppPtr,
+    "cannot use 'const' on 'T*', prefer to use the syntax 'const Ptr<T>' instead")
+DIAGNOSTIC(
+    20018,
+    Error,
+    disallowConstAsTypeModifier,
+    "cannot use 'const' as a type modifier")
 
 DIAGNOSTIC(
     20101,
@@ -701,11 +711,6 @@ DIAGNOSTIC(
     argumentExpectedLValue,
     "argument passed to parameter '$0' must be l-value.")
 DIAGNOSTIC(
-    30078,
-    Error,
-    cannotTakeConstantPointers,
-    "Not allowed to take pointer of an immutable object")
-DIAGNOSTIC(
     30048,
     Error,
     argumentHasMoreMemoryQualifiersThanParam,
@@ -826,7 +831,12 @@ DIAGNOSTIC(
     30078,
     Error,
     coherentKeywordOnAPointer,
-    "cannot have a `globallycoherent T*` or a `coherent T*`, use `CoherentPtr<T>` instead")
+    "cannot have a `globallycoherent T*` or a `coherent T*`, use explicit methods for coherent operations instead")
+DIAGNOSTIC(
+    30079,
+    Error,
+    cannotTakeConstantPointers,
+    "Not allowed to take pointer of an immutable object")
 DIAGNOSTIC(
     30100,
     Error,
