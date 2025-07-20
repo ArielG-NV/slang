@@ -1708,6 +1708,13 @@ bool SemanticsVisitor::_coerce(
             if (sink)
             {
                 sink->diagnose(fromExpr, Diagnostics::ambiguousConversion, fromType, toType);
+                for (auto candidate : overloadContext.bestCandidates)
+                {
+                    sink->diagnose(
+                        candidate.item.declRef,
+                        Diagnostics::seeDeclarationOf,
+                        candidate.item.declRef);
+                }
             }
 
             *outToExpr = CreateErrorExpr(fromExpr);

@@ -20,10 +20,8 @@ void computeMain(int id : SV_DispatchThreadID)
 
     // CHECK: ([[# @LINE+1]]): error 41404
     ptr1[id + 1] = 1;
-    *ptr1 = 1;
-
     // CHECK: ([[# @LINE+1]]): error 41404
-
+    *ptr1 = 1;
     writeToReadOnlyPointer(ptr1);
     output[id] = ptr1[id];
 }

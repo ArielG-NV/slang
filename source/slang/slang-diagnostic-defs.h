@@ -934,7 +934,7 @@ DIAGNOSTIC(
     30080,
     Error,
     ambiguousConversion,
-    "more than one implicit conversion exists from '$0' to '$1'")
+    "more than one conversion exists from '$0' to '$1'")
 DIAGNOSTIC(
     30081,
     Warning,

@@ -1,4 +1,4 @@
-// TEST:SIMPLE(filecheck=CHECK):-stage compute -entry computeMain -target spirv
+//TEST:SIMPLE(filecheck=CHECK):-stage compute -entry computeMain -target spirv
 
 //CHECK: OpEntryPoint
 //CHECK-NOT: error
