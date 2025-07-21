@@ -1,0 +1,24 @@
+//TEST:SIMPLE(filecheck=SPIRV):-stage compute -entry computeMain -target spirv
+//TEST(compute):COMPARE_COMPUTE(filecheck-buffer=CHECK):-vk -output-using-type -emit-spirv-directly
+
+// Ensure SPIRV emits coherent operations here
+// SPIRV: MakePointerVisible
+// SPIRV: MakePointerAvailable
+
+// CHECK: 0
+// CHECK-NEXT: 5
+
+//TEST_INPUT: RWTexture2D(format=R32Uint, size=8, content = one, mipMaps = 1):name=texture
+RWTexture1D<uint> texture;
+
+//TEST_INPUT: ubuffer(data=[0 0 0 0], stride=4):out,name outputBuffer
+RWStructuredBuffer<uint> outputBuffer;
+
+[numthreads(32, 1, 1)]
+void computeMain()
+{
+    Ptr<uint> ptrIn = &texture[1];
+
+    coherentStore(ptrIn, 5, 4, MemoryScope::Device);
+    outputBuffer[0] = coherentLoad(ptrIn, 4, MemoryScope::Device);
+}

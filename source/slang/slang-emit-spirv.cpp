@@ -3969,6 +3969,11 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
         }
     }
 
+    void maybeRequireVMMDeviceScope(IRCoherentOperation* op)
+    {
+        if ((MemoryScope)op->getMemoryScope()->getValue() == MemoryScope::Device)
+            requireSPIRVCapability(SpvCapabilityVulkanMemoryModelDeviceScopeKHR);         
+    }
     // The instructions that appear inside the basic blocks of
     // functions are what we will call "local" instructions.
     //
@@ -4381,6 +4386,47 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
         case kIROp_ImageSubscript:
             result = emitImageSubscript(parent, as<IRImageSubscript>(inst));
             break;
+        case kIROp_CoherentLoad:
+        {
+            auto op = as<IRCoherentLoad>(inst);
+            maybeRequireVMMDeviceScope(op);
+            auto memoryAccessMask = SpvMemoryAccessMakePointerVisibleMask | SpvMemoryAccessNonPrivatePointerMask;
+            result = emitInstCustomOperandFunc(
+                parent,
+                inst,
+                SpvOpLoad,
+                [&]()
+                {
+                    emitOperand(inst->getFullType());
+                    emitOperand(kResultID);
+                    emitOperand(op->getPtr());
+                    emitOperand(SpvLiteralInteger::from32(memoryAccessMask));
+                    emitOperand(op->getAlignment());
+                    emitOperand(op->getMemoryScope());
+                });
+            break;
+        }
+        case kIROp_CoherentStore:
+        {
+            auto op = as<IRCoherentStore>(inst);
+            maybeRequireVMMDeviceScope(op);
+            auto memoryAccessMask = SpvMemoryAccessMakePointerAvailableMask | SpvMemoryAccessNonPrivatePointerMask;
+            result = emitInstCustomOperandFunc(
+                parent,
+                inst,
+                SpvOpStore,
+                [&]()
+                {
+                    emitOperand(inst->getFullType());
+                    emitOperand(kResultID);
+                    emitOperand(op->getPtr());
+                    emitOperand(op->getSrc());
+                    emitOperand(SpvLiteralInteger::from32(memoryAccessMask));
+                    emitOperand(op->getAlignment());
+                    emitOperand(op->getMemoryScope());
+                });
+            break;
+        }
         case kIROp_AtomicInc:
             {
                 if (m_memoryModel == SpvMemoryModelVulkan)

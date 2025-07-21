@@ -28,7 +28,7 @@ By default, the Slang compiler produces the SPIRV code using GLSL450 memory mode
     sessionDesc.compilerOptionEntryCount = 1;
 ```
 
-If the shader uses `CoopVec` or `CoopMat` intrinsics, then the Slang compiler will automatically use `vk_mem_model` capability.
+If the shader uses explicit-coherent-operations, `CoopVec` or `CoopMat` intrinsics, then the Slang compiler will automatically use `vk_mem_model` capability. 
 
 Combined texture sampler
 ------------------------
