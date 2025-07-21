@@ -573,6 +573,16 @@ class MagicTypeModifier : public Modifier
     FIDDLE() uint32_t tag = uint32_t(0);
 };
 
+// A modifier that indicates a built-in enum type (e.g., `Access`).
+// This allows the Slang frontend to be aware of and efficently generate
+// EnumCase nodes.
+FIDDLE()
+class BuiltinEnumModifier : public Modifier
+{
+    FIDDLE(...)
+    FIDDLE() String name;
+};
+
 // A modifier that indicates a built-in associated type requirement (e.g., `Differential`)
 FIDDLE()
 class BuiltinRequirementModifier : public Modifier
@@ -1953,7 +1963,7 @@ class NoSideEffectAttribute : public Attribute
     FIDDLE(...)
 };
 
-/// A `[KnownBuiltin("name")]` attribute allows the compiler to
+/// A `[KnownBuiltin(name)]` attribute allows the compiler to
 /// identify this declaration during compilation, despite obfuscation or
 /// linkage removing optimizations
 ///
@@ -1961,7 +1971,7 @@ FIDDLE()
 class KnownBuiltinAttribute : public Attribute
 {
     FIDDLE(...)
-    FIDDLE() String name;
+    FIDDLE() IntVal* name;
 };
 
 /// A modifier that applies to types rather than declarations.

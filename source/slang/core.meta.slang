@@ -89,7 +89,7 @@ syntax __extern_cpp : ExternCppModifier;
 __magic_type(DefaultInitializableType)
 interface IDefaultInitializable
 {
-    __builtin_requirement($( (int)BuiltinRequirementKind::DefaultInitializableConstructor))
+    __builtin_requirement($((int)BuiltinRequirementKind::DefaultInitializableConstructor))
     __init();
 }
 
@@ -99,15 +99,15 @@ interface IDefaultInitializable
 interface IComparable
 {
     /// Returns true if two values of the conforming type are equal.
-    __builtin_requirement($( (int)BuiltinRequirementKind::Equals))
+    __builtin_requirement($((int)BuiltinRequirementKind::Equals))
     bool equals(This other);
 
     /// Returns true if `this` is less than `other`.
-    __builtin_requirement($( (int)BuiltinRequirementKind::LessThan))
+    __builtin_requirement($((int)BuiltinRequirementKind::LessThan))
     bool lessThan(This other);
 
     /// Returns true if `this` is less than or equal to `other`.
-    __builtin_requirement($( (int)BuiltinRequirementKind::LessThanOrEquals))
+    __builtin_requirement($((int)BuiltinRequirementKind::LessThanOrEquals))
     bool lessThanOrEquals(This other);
 }
 
@@ -169,42 +169,42 @@ interface IArithmetic : IComparable
 interface ILogical : IComparable
 {
     /// Shifts the bits of this value to the left by the specified number of positions.
-    __builtin_requirement($( (int)BuiltinRequirementKind::Shl) )
+    __builtin_requirement($((int)BuiltinRequirementKind::Shl))
     This shl(int value);
 
     /// Shifts the bits of this value to the right by the specified number of positions.
-    __builtin_requirement($( (int)BuiltinRequirementKind::Shr) )
+    __builtin_requirement($((int)BuiltinRequirementKind::Shr))
     This shr(int value);
 
     /// Performs a bitwise AND operation on this value with another value of the same type.
-    __builtin_requirement($( (int)BuiltinRequirementKind::BitAnd) )
+    __builtin_requirement($((int)BuiltinRequirementKind::BitAnd))
     This bitAnd(This other);
 
     /// Performs a bitwise OR operation on this value with another value of the same type.
-    __builtin_requirement($( (int)BuiltinRequirementKind::BitOr) )
+    __builtin_requirement($((int)BuiltinRequirementKind::BitOr))
     This bitOr(This other);
 
     /// Performs a bitwise XOR operation on this value with another value of the same type.
-    __builtin_requirement($( (int)BuiltinRequirementKind::BitXor) )
+    __builtin_requirement($((int)BuiltinRequirementKind::BitXor))
     This bitXor(This other);
 
     /// Performs a bitwise NOT operation on this value, flipping all bits.
-    __builtin_requirement($( (int)BuiltinRequirementKind::BitNot) )
+    __builtin_requirement($((int)BuiltinRequirementKind::BitNot))
     This bitNot();
 
     /// Performs a logical AND operation on this value with another value of the same type.
-    __builtin_requirement($( (int)BuiltinRequirementKind::And) )
+    __builtin_requirement($((int)BuiltinRequirementKind::And))
     This and(This other);
 
     /// Performs a logical OR operation on this value with another value of the same type.
-    __builtin_requirement($( (int)BuiltinRequirementKind::Or) )
+    __builtin_requirement($((int)BuiltinRequirementKind::Or))
     This or(This other);
 
     /// Performs a logical NOT operation on this value, returning the logical negation.
-    __builtin_requirement($( (int)BuiltinRequirementKind::Not) )
+    __builtin_requirement($((int)BuiltinRequirementKind::Not))
     This not();
 
-    __builtin_requirement($( (int)BuiltinRequirementKind::InitLogicalFromInt) )
+    __builtin_requirement($((int)BuiltinRequirementKind::InitLogicalFromInt))
     __init(int val);
 }
 
@@ -603,25 +603,25 @@ void static_assert(constexpr bool condition, NativeString errorMessage);
 ///
 /// 
 __magic_type(DifferentiableType)
-[KnownBuiltin("IDifferentiable")]
+[KnownBuiltin($( (int)KnownBuiltinDeclName::IDifferentiable))]
 interface IDifferentiable
 {
     // Note: the compiler implementation requires the `Differential` associated type to be defined
     // before anything else.
 
-    __builtin_requirement($( (int)BuiltinRequirementKind::DifferentialType) )
+    __builtin_requirement($((int)BuiltinRequirementKind::DifferentialType))
     associatedtype Differential : IDifferentiable;
 
     /// Returns a zero-initialized value of the differential type.
-    __builtin_requirement($( (int)BuiltinRequirementKind::DZeroFunc) )
+    __builtin_requirement($((int)BuiltinRequirementKind::DZeroFunc))
     static Differential dzero();
 
     /// Adds two differential values and returns the result.
-    __builtin_requirement($( (int)BuiltinRequirementKind::DAddFunc) )
+    __builtin_requirement($((int)BuiltinRequirementKind::DAddFunc))
     static Differential dadd(Differential, Differential);
 
     /// Multiplies a scalar value of a built-in real type with a differential value and returns the result.
-    __builtin_requirement($( (int)BuiltinRequirementKind::DMulFunc) )
+    __builtin_requirement($((int)BuiltinRequirementKind::DMulFunc))
     __generic<T : __BuiltinRealType>
     static Differential dmul(T, Differential);
 };
@@ -646,10 +646,10 @@ interface IDifferentiable
 /// @remarks Support for this interface is still experimental and subject to change.
 ///
 __magic_type(DifferentiablePtrType)
-[KnownBuiltin("IDifferentiablePtr")]
+[KnownBuiltin($( (int)KnownBuiltinDeclName::IDifferentiablePtr))]
 interface IDifferentiablePtrType
 {
-    __builtin_requirement($( (int)BuiltinRequirementKind::DifferentialPtrType) )
+    __builtin_requirement($((int)BuiltinRequirementKind::DifferentialPtrType))
     associatedtype Differential : IDifferentiablePtrType;
 };
 
@@ -831,7 +831,7 @@ interface __EnumType : ILogical
     // conflict if a user had an `enum` case called `Tag`
     associatedtype __Tag : __BuiltinIntegerType;
 
-    __builtin_requirement($( (int)BuiltinRequirementKind::InitLogicalFromInt) )
+    __builtin_requirement($((int)BuiltinRequirementKind::InitLogicalFromInt))
     __init(__Tag value);
 };
 
@@ -1252,18 +1252,96 @@ struct __none_t
 {
 };
 
+__builtin_enum(AddressSpace)
+enum AddressSpace : uint64_t
+{
+    Generic = $( (uint64_t)AddressSpace::Generic),
+    // Corresponds to SPIR-V's SpvStorageClassPrivate
+    ThreadLocal = $( (uint64_t)AddressSpace::ThreadLocal),
+    Global = $( (uint64_t)AddressSpace::Global),
+    // Corresponds to SPIR-V's SpvStorageClassWorkgroup
+    GroupShared = $( (uint64_t)AddressSpace::GroupShared),
+    // Corresponds to SPIR-V's SpvStorageClassUniform
+    Uniform = $( (uint64_t)AddressSpace::Uniform),
+    // specific address space for payload data in metal
+    MetalObjectData = $( (uint64_t)AddressSpace::MetalObjectData),
+    // Corresponds to SPIR-V's SpvStorageClassInput
+    Input = $( (uint64_t)AddressSpace::Input),
+    // Same as `Input`, but used for builtin input variables
+    BuiltinInput = $( (uint64_t)AddressSpace::BuiltinInput),
+    // Corresponds to SPIR-V's SpvStorageClassOutput
+    Output = $( (uint64_t)AddressSpace::Output),
+    // Same as `Output`, but used for builtin output variables
+    BuiltinOutput = $( (uint64_t)AddressSpace::BuiltinOutput),
+    // Corresponds to SPIR-V's SpvStorageClassTaskPayloadWorkgroupEXT
+    TaskPayloadWorkgroup = $( (uint64_t)AddressSpace::TaskPayloadWorkgroup),
+    // Corresponds to SPIR-V's SpvStorageClassFunction
+    Function = $( (uint64_t)AddressSpace::Function),
+    // Corresponds to SPIR-V's SpvStorageClassStorageBuffer
+    StorageBuffer = $( (uint64_t)AddressSpace::StorageBuffer),
+    // Corresponds to SPIR-V's SpvStorageClassPushConstant
+    PushConstant = $( (uint64_t)AddressSpace::PushConstant),
+    // Corresponds to SPIR-V's SpvStorageClassRayPayloadKHR
+    RayPayloadKHR = $( (uint64_t)AddressSpace::RayPayloadKHR),
+    // Corresponds to SPIR-V's SpvStorageClassIncomingRayPayloadKHR
+    IncomingRayPayload = $( (uint64_t)AddressSpace::IncomingRayPayload),
+    // Corresponds to SPIR-V's SpvStorageClassCallableDataKHR
+    CallableDataKHR = $( (uint64_t)AddressSpace::CallableDataKHR),
+    // Corresponds to SPIR-V's SpvStorageClassIncomingCallableDataKHR
+    IncomingCallableData = $( (uint64_t)AddressSpace::IncomingCallableData),
+    // Corresponds to SPIR-V's SpvStorageClassHitObjectAttributeNV
+    HitObjectAttribute = $( (uint64_t)AddressSpace::HitObjectAttribute),
+    // Corresponds to SPIR-V's SpvStorageClassHitAttributeKHR
+    HitAttribute = $( (uint64_t)AddressSpace::HitAttribute),
+    // Corresponds to SPIR-V's SpvStorageClassShaderRecordBufferKHR
+    ShaderRecordBuffer = $( (uint64_t)AddressSpace::ShaderRecordBuffer),
+    // Corresponds to SPIR-V's SpvStorageClassUniformConstant
+    UniformConstant = $( (uint64_t)AddressSpace::UniformConstant),
+    // Corresponds to SPIR-V's SpvStorageClassImage
+    Image = $( (uint64_t)AddressSpace::Image),
+    // Represents a SPIR-V specialization constant
+    SpecializationConstant = $( (uint64_t)AddressSpace::SpecializationConstant),
+    // Corresponds to SPIR-V's SpvStorageClassNodePayloadAMDX
+    NodePayloadAMDX = $( (uint64_t)AddressSpace::NodePayloadAMDX),
+
+    // Default address space for a user-defined pointer
+    UserPointer = $( (uint64_t)AddressSpace::UserPointer),
+};
+
+// https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#_scope_id
+__builtin_enum(MemoryScope)
+enum MemoryScope : int32_t
+{
+    CrossDevice = $( (int32_t)MemoryScope::CrossDevice),
+    Device = $( (int32_t)MemoryScope::Device),
+    Workgroup = $( (int32_t)MemoryScope::Workgroup),
+    Subgroup = $( (int32_t)MemoryScope::Subgroup),
+    Invocation = $( (int32_t)MemoryScope::Invocation),
+    QueueFamily = $( (int32_t)MemoryScope::QueueFamily),
+    ShaderCall = $( (int32_t)MemoryScope::ShaderCall),
+    ShaderCallKHR = $( (int32_t)MemoryScope::ShaderCall),
+}
+
+__builtin_enum(Access)
+enum Access : uint64_t
+{
+    ReadWrite = $( (uint64_t)AccessQualifier::ReadWrite),
+    Read = $( (uint64_t)AccessQualifier::Read),
+}
+
 //@public:
 /// Represents a pointer type.
 /// @param T The type of the value pointed to.
 /// @remarks `T* val` is equivalent to `Ptr<T> val`.
-__generic<T, let addrSpace : uint64_t = $( (uint64_t)AddressSpace::UserPointer)ULL>
+__generic<T, Access access = Access::ReadWrite, AddressSpace addrSpace = AddressSpace::UserPointer>
 __magic_type(PtrType)
 __intrinsic_type($(kIROp_PtrType))
 struct Ptr
 {
-    __generic<U>
+    // A user is allowed to explicitly cast between any pointer type.
+    __generic<U, Access accessOther>
     __intrinsic_op($(kIROp_BitCast))
-    __init(Ptr<U, addrSpace> ptr);
+    __init(Ptr<U, accessOther, addrSpace> ptr);
 
     __intrinsic_op($(kIROp_CastIntToPtr))
     __init(uint64_t val);
@@ -1322,50 +1400,64 @@ void storeAligned<int alignment, T>(T* ptr, T value)
     __store_aligned(ptr, value, __align_attr(alignment));
 }
 
+${{{
+    StringBuilder ptrTypeParameterList;
+    ptrTypeParameterList << "T, Access access, AddressSpace addrSpace";
+    String ptrArgListDef = ptrTypeParameterList.toString();
+
+    StringBuilder ptrArgListBuilder;
+    ptrArgListBuilder << "T, access, addrSpace";
+    String ptrArgList = ptrArgListBuilder.toString();
+
+    StringBuilder fullPtrTypeBuilder;
+    fullPtrTypeBuilder << "Ptr<" << ptrArgList << ">";
+    String fullPtrType = fullPtrTypeBuilder.toString();
+
+}}}
 //@hidden:
 __intrinsic_op($(kIROp_Load))
-T __load<T, let addrSpace : uint64_t>(Ptr<T, addrSpace> ptr);
+T __load<$(ptrArgListDef)>($(fullPtrType) ptr);
 
 __intrinsic_op($(kIROp_Store))
-void __store<T, let addrSpace : uint64_t>(Ptr<T, addrSpace> ptr, T val);
+void __store<$(ptrArgListDef)>($(fullPtrType) ptr, T val);
 
 __intrinsic_op($(kIROp_GetElementPtr))
-Ptr<T, addrSpace> __getElementPtr<T, let addrSpace : uint64_t, TIndex : __BuiltinIntegerType>(Ptr<T, addrSpace> ptr, TIndex index);
+$(fullPtrType) __getElementPtr<$(ptrArgListDef), TIndex : __BuiltinIntegerType>($(fullPtrType) ptr, TIndex index);
 
 __intrinsic_op($(kIROp_GetOffsetPtr))
-Ptr<T, addrSpace> __getOffsetPtr<T, let addrSpace : uint64_t, TIndex : __BuiltinIntegerType>(Ptr<T, addrSpace> ptr, TIndex index);
+$(fullPtrType) __getOffsetPtr<$(ptrArgListDef), TIndex : __BuiltinIntegerType>($(fullPtrType) ptr, TIndex index);
 
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 __intrinsic_op($(kIROp_Less))
-bool operator <(Ptr<T, addrSpace> p1, Ptr<T, addrSpace> p2);
+bool operator <($(fullPtrType) p1, $(fullPtrType) p2);
 
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 __intrinsic_op($(kIROp_Leq))
-bool operator <=(Ptr<T, addrSpace> p1, Ptr<T, addrSpace> p2);
+bool operator <=($(fullPtrType) p1, $(fullPtrType) p2);
 
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 __intrinsic_op($(kIROp_Greater))
-bool operator>(Ptr<T, addrSpace> p1, Ptr<T, addrSpace> p2);
+bool operator>($(fullPtrType) p1, $(fullPtrType) p2);
 
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 __intrinsic_op($(kIROp_Geq))
-bool operator >=(Ptr<T, addrSpace> p1, Ptr<T, addrSpace> p2);
+bool operator >=($(fullPtrType) p1, $(fullPtrType) p2);
 
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 __intrinsic_op($(kIROp_Neq))
-bool operator !=(Ptr<T, addrSpace> p1, Ptr<T, addrSpace> p2);
+bool operator !=($(fullPtrType) p1, $(fullPtrType) p2);
 
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 __intrinsic_op($(kIROp_Eql))
-bool operator ==(Ptr<T, addrSpace> p1, Ptr<T, addrSpace> p2);
+bool operator ==($(fullPtrType) p1, $(fullPtrType) p2);
 
 //@public:
 extension bool : IRangedValue
 {
-    __generic<T, let addrSpace : uint64_t>
+    __generic<$(ptrArgListDef)>
     __implicit_conversion($(kConversionCost_PtrToBool))
     __intrinsic_op($(kIROp_CastPtrToBool))
-    __init(Ptr<T, addrSpace> ptr);
+    __init($(fullPtrType) ptr);
 
     __generic<T : __EnumType>
     __implicit_conversion($(kConversionCost_IntegerTruncate))
@@ -1381,9 +1473,9 @@ extension bool : IRangedValue
 
 extension uint64_t : IRangedValue
 {
-    __generic<T, let addrSpace : uint64_t>
+    __generic<$(ptrArgListDef)>
     __intrinsic_op($(kIROp_CastPtrToInt))
-    __init(Ptr<T, addrSpace> ptr);
+    __init($(fullPtrType) ptr);
 
     static const uint64_t maxValue = 0xFFFFFFFFFFFFFFFFULL;
     static const uint64_t minValue = 0;
@@ -1391,9 +1483,9 @@ extension uint64_t : IRangedValue
 
 extension int64_t : IRangedValue
 {
-    __generic<T, let addrSpace : uint64_t>
+    __generic<$(ptrArgListDef)>
     __intrinsic_op($(kIROp_CastPtrToInt))
-    __init(Ptr<T, addrSpace> ptr);
+    __init($(fullPtrType) ptr);
 
     static const int64_t maxValue =  0x7FFFFFFFFFFFFFFFLL;
     static const int64_t minValue = -0x8000000000000000LL;
@@ -1401,9 +1493,9 @@ extension int64_t : IRangedValue
 
 extension intptr_t : IRangedValue
 {
-    __generic<T, let addrSpace : uint64_t>
+    __generic<$(ptrArgListDef)>
     __intrinsic_op($(kIROp_CastPtrToInt))
-    __init(Ptr<T, addrSpace> ptr);
+    __init($(fullPtrType) ptr);
     static const intptr_t maxValue = $(SLANG_PROCESSOR_X86_64?"0x7FFFFFFFFFFFFFFFz":"0x7FFFFFFFz");
     static const intptr_t minValue = $(SLANG_PROCESSOR_X86_64?"0x8000000000000000z":"0x80000000z");
     static const int size = $(SLANG_PROCESSOR_X86_64?"8":"4");
@@ -1411,9 +1503,9 @@ extension intptr_t : IRangedValue
 
 extension uintptr_t : IRangedValue
 {
-    __generic<T, let addrSpace : uint64_t>
+    __generic<$(ptrArgListDef)>
     __intrinsic_op($(kIROp_CastPtrToInt))
-    __init(Ptr<T, addrSpace> ptr);
+    __init($(fullPtrType) ptr);
     static const uintptr_t maxValue = $(SLANG_PROCESSOR_X86_64?"0xFFFFFFFFFFFFFFFFz":"0xFFFFFFFFz");
     static const uintptr_t minValue = 0z;
     static const int size = $(SLANG_PROCESSOR_X86_64?"8":"4");
@@ -1444,7 +1536,7 @@ __intrinsic_type($(kIROp_ConstRefType))
 struct ConstRef
 {};
 
-typealias __Addr<T> = Ptr<T, $( (uint64_t)AddressSpace::Generic)ULL>;
+typealias __Addr<T> = Ptr<T, Access::ReadWrite, AddressSpace::Generic>;
 
 //@public:
 
@@ -1808,10 +1900,10 @@ extension Ptr<void>
     [__unsafeForceInlineEarly]
     __init(NativeString nativeStr) { this = nativeStr.getBuffer(); }
 
-    __generic<T, let addrSpace : uint64_t>
+    __generic<$(ptrArgListDef)>
     __intrinsic_op($(kIROp_BitCast))
     __implicit_conversion($(kConversionCost_PtrToVoidPtr))
-    __init(Ptr<T, addrSpace> ptr);
+    __init($(fullPtrType) ptr);
 
     __generic<T>
     __intrinsic_op($(kIROp_BitCast))
@@ -2576,28 +2668,31 @@ for (auto op : intrinsicUnaryOps)
 
 }}}}
 
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 __intrinsic_op(0)
 [require(cpp_cuda_spirv)]
-__prefix Ref<T> operator*(Ptr<T, addrSpace> value);
+__prefix Ref<T> operator*($(fullPtrType) value);
 
+// Cannot infer generic from use-site, therefore only T can be 
+// used in the generic parameter list.
 __generic<T>
 __intrinsic_op(0)
 [require(cpp_cuda_spirv)]
-__prefix Ptr<T, $( (uint64_t)AddressSpace::UserPointer)ULL> operator&(__ref T value);
+__prefix Ptr<T> operator&(__ref T value);
 
 __generic<T>
 __intrinsic_op(0)
+[KnownBuiltin($( (int)KnownBuiltinDeclName::OperatorAddressOf))]
 [require(cpp_cuda_spirv)]
-__Addr<T> __get_addr( __ref T value);
+__Addr<T> __get_addr(__ref T value);
 
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 __intrinsic_op($(kIROp_GetOffsetPtr))
-Ptr<T, addrSpace> operator+(Ptr<T, addrSpace> value, int64_t offset);
+$(fullPtrType) operator+($(fullPtrType) value, int64_t offset);
 
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 [__unsafeForceInlineEarly]
-Ptr<T, addrSpace> operator -(Ptr<T, addrSpace> value, int64_t offset)
+$(fullPtrType) operator-($(fullPtrType) value, int64_t offset)
 {
     return __getOffsetPtr(value, -offset);
 }
@@ -2662,9 +2757,9 @@ matrix<T,R,C> operator$(op.name)(in out matrix<T,R,C,L> value)
 {$(fixity.bodyPrefix) value = value $(op.binOp) __builtin_cast<T>(1); return $(fixity.returnVal); }
 
 $(fixity.qual)
-__generic<T, let addrSpace : uint64_t>
+__generic<$(ptrArgListDef)>
 [__unsafeForceInlineEarly]
-Ptr<T, addrSpace> operator$(op.name)(in out Ptr<T, addrSpace> value)
+$(fullPtrType) operator$(op.name)(in out $(fullPtrType) value)
 {$(fixity.bodyPrefix) value = value $(op.binOp) 1; return $(fixity.returnVal); }
 
 ${{{{
@@ -3524,18 +3619,6 @@ enum MemoryOrder
     SeqCst = $(kIRMemoryOrder_SeqCst),
 }
 
-// https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#_scope_id
-enum MemoryScope
-{
-    CrossDevice = 0,
-    Device = 1,
-    Workgroup = 2,
-    Subgroup = 3,
-    Invocation = 4,
-    QueueFamily = 5,
-    ShaderCallKHR = 6,
-};
-
 /// Represents types that can be used in any atomic operations.
 /// Implemented by builtin scalar types: `int`, `uint`, `int64_t`, `uint64_t`, `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `float`, `double` and `half`.
 [sealed] interface IAtomicable {}
@@ -4040,10 +4123,10 @@ attribute_syntax [__readNone] : ReadNoneAttribute;
 /// Represents the applicable target for an attribute.
 enum _AttributeTargets
 {
-    Struct = $( (int) UserDefinedAttributeTargets::Struct), /// Struct types.
-    Var = $( (int) UserDefinedAttributeTargets::Var), /// Global and local variables and constants.
-    Function = $( (int) UserDefinedAttributeTargets::Function), /// Functions or member functions.
-    Param = $( (int) UserDefinedAttributeTargets::Param), /// Function parameters.
+    Struct = $((int) UserDefinedAttributeTargets::Struct), /// Struct types.
+    Var = $((int) UserDefinedAttributeTargets::Var), /// Global and local variables and constants.
+    Function = $((int) UserDefinedAttributeTargets::Function), /// Functions or member functions.
+    Param = $((int) UserDefinedAttributeTargets::Param), /// Function parameters.
 };
 
 /// Mark a struct type as a user defined attribute type.
@@ -4233,7 +4316,7 @@ attribute_syntax [PreferCheckpoint] : PreferCheckpointAttribute;
 
 // @hidden:
 __attributeTarget(DeclBase)
-attribute_syntax [KnownBuiltin(name : String)] : KnownBuiltinAttribute;
+attribute_syntax [KnownBuiltin(name : int)] : KnownBuiltinAttribute;
 
 __attributeTarget(FunctionDeclBase)
 attribute_syntax [__GLSLRequireShaderInputParameter(parameterNumber:int)] : GLSLRequireShaderInputParameterAttribute;
@@ -4275,7 +4358,7 @@ __attributeTarget(FuncDecl)
 attribute_syntax [RequireFullQuads] : RequireFullQuadsAttribute;
 
 __generic<T>
-typealias NodePayloadPtr = Ptr<T, $( (uint64_t)AddressSpace::NodePayloadAMDX)>;
+typealias NodePayloadPtr = Ptr<T, Access::ReadWrite, AddressSpace::NodePayloadAMDX>;
 
 __attributeTarget(StructDecl)
 attribute_syntax [raypayload] : RayPayloadAttribute;

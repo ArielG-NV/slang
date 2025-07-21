@@ -7,6 +7,7 @@
 //
 // TODO: the builder probably needs its own file.
 
+#include "slang-ast-support-types.h"
 #include "slang-capability.h"
 #include "slang-compiler.h"
 #include "slang-ir.h"
@@ -678,8 +679,8 @@ struct IRKnownBuiltinDecoration : IRDecoration
 {
     FIDDLE(leafInst())
 
-    IRStringLit* getNameOperand() { return cast<IRStringLit>(getOperand(0)); }
-    UnownedStringSlice getName() { return getNameOperand()->getStringSlice(); }
+    IRIntLit* getNameOperand() { return cast<IRIntLit>(getOperand(0)); }
+    KnownBuiltinDeclName getName() { return KnownBuiltinDeclName(getIntVal(getNameOperand())); }
 };
 
 FIDDLE()
@@ -3726,14 +3727,31 @@ public:
 
     IROutType* getOutType(IRType* valueType);
     IRInOutType* getInOutType(IRType* valueType);
-    IRRefType* getRefType(IRType* valueType, AddressSpace addrSpace);
-    IRConstRefType* getConstRefType(IRType* valueType);
+    IRRefType* getRefType(
+        IRType* valueType,
+        AccessQualifier accessQualifier,
+        AddressSpace addrSpace);
+    IRConstRefType* getConstRefType(
+        IRType* valueType,
+        AccessQualifier accessQualifier,
+        AddressSpace addrSpace);
     IRPtrTypeBase* getPtrType(IROp op, IRType* valueType);
-    IRPtrType* getPtrType(IROp op, IRType* valueType, AddressSpace addressSpace);
-    IRPtrType* getPtrType(IROp op, IRType* valueType, IRInst* addressSpace);
-    IRPtrType* getPtrType(IRType* valueType, AddressSpace addressSpace)
+    IRPtrType* getPtrType(
+        IROp op,
+        IRType* valueType,
+        AccessQualifier accessQualifier,
+        AddressSpace addressSpace);
+    IRPtrType* getPtrType(
+        IROp op,
+        IRType* valueType,
+        IRInst* accessQualifier,
+        IRInst* addressSpace);
+    IRPtrType* getPtrType(
+        IRType* valueType,
+        AccessQualifier accessQualifier,
+        AddressSpace addressSpace)
     {
-        return getPtrType(kIROp_PtrType, valueType, addressSpace);
+        return getPtrType(kIROp_PtrType, valueType, accessQualifier, addressSpace);
     }
 
     IRTextureTypeBase* getTextureType(
@@ -5341,9 +5359,21 @@ public:
         addDecoration(value, d, maxCount);
     }
 
+    void addKnownBuiltinDecoration(IRInst* value, KnownBuiltinDeclName enumValue)
+    {
+        addDecoration(
+            value,
+            kIROp_KnownBuiltinDecoration,
+            getIntValue(getIntType(), IRIntegerValue(enumValue)));
+    }
+
     void addKnownBuiltinDecoration(IRInst* value, UnownedStringSlice const& name)
     {
-        addDecoration(value, kIROp_KnownBuiltinDecoration, getStringValue(name));
+        auto enumValue = getKnownBuiltinDeclNameFromString(name);
+        addDecoration(
+            value,
+            kIROp_KnownBuiltinDecoration,
+            getIntValue(getIntType(), IRIntegerValue(enumValue)));
     }
 
     void addMemoryQualifierSetDecoration(IRInst* inst, IRIntegerValue flags)

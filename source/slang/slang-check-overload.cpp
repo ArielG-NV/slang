@@ -913,7 +913,7 @@ bool SemanticsVisitor::TryCheckOverloadCandidateDirections(
                         context.loc,
                         Diagnostics::mutatingMethodOnImmutableValue,
                         funcDeclRef.getName());
-                    maybeDiagnoseThisNotLValue(context.baseExpr);
+                    maybeDiagnoseConstVariableAssignment(context.baseExpr);
                 }
                 return false;
             }
@@ -2711,6 +2711,14 @@ Expr* SemanticsVisitor::ResolveInvoke(InvokeExpr* expr)
                                             expr->arguments[0],
                                             &tempSink,
                                             &conversionCost);
+                if (tempSink.getErrorCount())
+                {
+                    Slang::ComPtr<ISlangBlob> blob;
+                    tempSink.getBlobIfNeeded(blob.writeRef());
+                    getSink()->diagnoseRaw(
+                        Severity::Error,
+                        static_cast<char const*>(blob->getBufferPointer()));
+                }
                 if (auto resultInvokeExpr = as<InvokeExpr>(resultExpr))
                 {
                     resultInvokeExpr->originalFunctionExpr = expr->functionExpr;
