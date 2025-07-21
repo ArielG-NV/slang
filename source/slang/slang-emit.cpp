@@ -9,6 +9,7 @@
 #include "../core/slang-performance-profiler.h"
 #include "../core/slang-type-text-util.h"
 #include "../core/slang-writer.h"
+#include "slang-check-out-of-bound-access.h"
 #include "slang-emit-c-like.h"
 #include "slang-emit-cpp.h"
 #include "slang-emit-cuda.h"
@@ -60,6 +61,7 @@
 #include "slang-ir-legalize-empty-array.h"
 #include "slang-ir-legalize-global-values.h"
 #include "slang-ir-legalize-image-subscript.h"
+#include "slang-ir-legalize-matrix-types.h"
 #include "slang-ir-legalize-mesh-outputs.h"
 #include "slang-ir-legalize-uniform-buffer-load.h"
 #include "slang-ir-legalize-varying-params.h"
@@ -1118,6 +1120,7 @@ Result linkAndOptimizeIR(
     {
         checkForRecursiveTypes(irModule, sink);
         checkForRecursiveFunctions(codeGenContext->getTargetReq(), irModule, sink);
+        checkForOutOfBoundAccess(irModule, sink);
 
         if (requiredLoweringPassSet.missingReturn)
             checkForMissingReturns(irModule, sink, target, false);
@@ -1341,6 +1344,7 @@ Result linkAndOptimizeIR(
         legalizeEmptyTypes(targetProgram, irModule, sink);
     }
 
+    legalizeMatrixTypes(targetProgram, irModule, sink);
     legalizeVectorTypes(irModule, sink);
 
     // Once specialization and type legalization have been performed,

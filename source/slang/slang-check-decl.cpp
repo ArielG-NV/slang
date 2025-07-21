@@ -240,13 +240,19 @@ struct SemanticsDeclModifiersVisitor : public SemanticsDeclVisitorBase,
         // In HLSL, const global variables without static are uniform parameters
         // that cannot have default values
         // Exception: specialization constants are allowed to have initializers
+        // Exception: In GLSL mode, global const variables are real constants, not uniform
+        // parameters
         if (isGlobalDecl(decl) && (hasConst || hasUniform) && !hasStatic &&
             !hasSpecializationConstant && decl->initExpr)
         {
-            getSink()->diagnose(
-                decl,
-                Diagnostics::constGlobalVarWithInitRequiresStatic,
-                decl->getName());
+            auto moduleDecl = getModuleDecl(decl);
+            if (!moduleDecl || !moduleDecl->hasModifier<GLSLModuleModifier>())
+            {
+                getSink()->diagnose(
+                    decl,
+                    Diagnostics::constGlobalVarWithInitRequiresStatic,
+                    decl->getName());
+            }
         }
     }
 
@@ -8493,6 +8499,16 @@ bool SemanticsVisitor::isScalarIntegerType(Type* type)
         return false;
     auto baseType = basicType->getBaseType();
     return isIntegerBaseType(baseType) || baseType == BaseType::Bool;
+}
+
+Type* SemanticsVisitor::getMatchingIntType(Type* type)
+{
+    if (isScalarIntegerType(type))
+        return type;
+    if (auto enumTypeDecl = isDeclRefTypeOf<EnumDecl>(type))
+        if (enumTypeDecl.getDecl()->tagType)
+            return getMatchingIntType(enumTypeDecl.getDecl()->tagType);
+    return m_astBuilder->getIntType();
 }
 
 bool SemanticsVisitor::isHalfType(Type* type)
