@@ -6946,6 +6946,19 @@ struct SPIRVEmitContext : public SourceEmitterBase, public SPIRVEmitSharedContex
 
     SpvInst* emitGetOffsetPtr(SpvInstParent* parent, IRInst* inst)
     {
+        auto typeOfPtr = as<IRPtrTypeBase>(inst->getDataType());
+        switch (typeOfPtr->getAddressSpace())
+        {
+        case AddressSpace::StorageBuffer:
+        {
+            requireSPIRVCapability(SpvCapabilityVariablePointersStorageBuffer);
+            break;
+        }
+        case AddressSpace::GroupShared:
+            requireSPIRVCapability(SpvCapabilityVariablePointers);
+            break;
+        }
+        
         return emitOpPtrAccessChain(
             parent,
             inst,
