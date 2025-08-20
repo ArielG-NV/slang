@@ -2008,13 +2008,13 @@ LayoutRulesImpl kMetalParameterBlockLayoutRulesImpl_ = {
 };
 
 LayoutRulesImpl kMetalTier2ConstantBufferLayoutRulesImpl_ = {
-    &kMetalLayoutRulesFamilyImpl,
+    &kMetalArgumentBufferTier2LayoutRulesFamilyImpl,
     &kMetalLayoutRulesImpl,
     &kMetalTier2ObjectLayoutRulesImpl,
 };
 
 LayoutRulesImpl kMetalTier2ParameterBlockLayoutRulesImpl_ = {
-    &kMetalLayoutRulesFamilyImpl,
+    &kMetalArgumentBufferTier2LayoutRulesFamilyImpl,
     &kMetalLayoutRulesImpl,
     &kMetalTier2ObjectLayoutRulesImpl,
 };
