@@ -1158,13 +1158,19 @@ class GLSLLayoutLocalSizeAttribute : public Attribute
 };
 
 FIDDLE()
-class GLSLLayoutDerivativeGroupQuadAttribute : public Attribute
+class GLSLLayoutDerivativeGroupAttribute : public Attribute
 {
     FIDDLE(...)
 };
 
 FIDDLE()
-class GLSLLayoutDerivativeGroupLinearAttribute : public Attribute
+class GLSLLayoutDerivativeGroupQuadAttribute : public GLSLLayoutDerivativeGroupAttribute
+{
+    FIDDLE(...)
+};
+
+FIDDLE()
+class GLSLLayoutDerivativeGroupLinearAttribute : public GLSLLayoutDerivativeGroupAttribute
 {
     FIDDLE(...)
 };

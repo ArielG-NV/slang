@@ -401,6 +401,8 @@ struct SemanticsDeclHeaderVisitor : public SemanticsDeclVisitorBase,
 
     void visitClassDecl(ClassDecl* decl);
 
+    void visitEmptyDecl(EmptyDecl* decl);
+
     /// Get the type of the storage accessed by an accessor.
     ///
     /// The type of storage is determined by the parent declaration.
@@ -2564,28 +2566,15 @@ void SemanticsDeclHeaderVisitor::visitClassDecl(ClassDecl* classDecl)
     checkVisibility(classDecl);
 }
 
-bool DiagnoseIsAllowedInitExpr(VarDeclBase* varDecl, DiagnosticSink* sink)
+void SemanticsDeclHeaderVisitor::visitEmptyDecl(
+    EmptyDecl* decl)
 {
-    // find groupshared modifier
-    if (varDecl->findModifier<HLSLGroupSharedModifier>())
+    auto sharedContext = this->getShared();
+    if (!sharedContext->isDerivativeGroupEnabledGlobally() &&
+        decl->findModifier<GLSLLayoutDerivativeGroupAttribute>())
     {
-        if (sink && varDecl->initExpr)
-            sink->diagnose(varDecl, Diagnostics::cannotHaveInitializer, varDecl, "groupshared");
-        return false;
+        sharedContext->setDerivativeGroupEnabledGlobally();
     }
-
-    if (as<InterfaceDecl>(varDecl->parentDecl))
-    {
-        if (sink && varDecl->initExpr)
-            sink->diagnose(
-                varDecl,
-                Diagnostics::cannotHaveInitializer,
-                varDecl,
-                "an interface requirement");
-        return false;
-    }
-
-    return true;
 }
 
 bool isDefaultInitializable(VarDeclBase* varDecl)

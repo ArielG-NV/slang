@@ -3489,6 +3489,12 @@ struct IRRequireQuadDerivatives : IRInst
 };
 
 FIDDLE()
+struct IRIsComputeDerivativeEnabled : IRInst
+{
+    FIDDLE(leafInst())
+};
+
+FIDDLE()
 struct IRStaticAssert : IRInst
 {
     FIDDLE(leafInst())

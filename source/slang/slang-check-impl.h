@@ -663,6 +663,12 @@ private:
     Dictionary<int, int64_t> bindingToByteOffset;
 };
 
+enum class SharedSemanticsContextFlags : int64_t
+{
+    None = 0,
+    DerivativeGroupEnabled = 1 << 0,
+};
+
 /// Shared state for a semantics-checking session.
 struct SharedSemanticsContext : public RefObject
 {
@@ -698,6 +704,7 @@ struct SharedSemanticsContext : public RefObject
     HashSet<ModuleDecl*> importedModulesSet;
 
     GLSLBindingOffsetTracker m_glslBindingOffsetTracker;
+    SharedSemanticsContextFlags flags;
 
 public:
     SharedSemanticsContext(
@@ -811,6 +818,16 @@ public:
     // For example, `Foo<T>` depends on the generic decl that defines `T`.
     //
     DeclRef<GenericDecl> getDependentGenericParent(DeclRef<Decl> declRef);
+
+    // Checks if we have a glsl style derivative group specifier (via) layout(...)
+    bool isDerivativeGroupEnabledGlobally()
+    {
+        return (int64_t)flags & (int64_t)SharedSemanticsContextFlags::DerivativeGroupEnabled;
+    }
+    void setDerivativeGroupEnabledGlobally()
+    {
+        flags = (SharedSemanticsContextFlags)((int64_t)flags | (int64_t)SharedSemanticsContextFlags::DerivativeGroupEnabled);
+    }
 
 private:
     /// Mapping from type declarations to the known extensiosn that apply to them

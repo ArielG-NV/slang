@@ -670,4 +670,5 @@ return {
 	["SPIRVAsmOperand.__imageType"] = 666,
 	["SPIRVAsmOperand.__sampledImageType"] = 667,
 	["Type.CLayout"] = 668,
+	["IsComputeDerivativeEnabled"] = 669,
 }

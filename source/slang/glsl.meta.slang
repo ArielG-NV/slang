@@ -1675,7 +1675,6 @@ public vec2 textureQueryLod(_Texture<
         format
     > sampler, float p)
 {
-    __requireComputeDerivative();
     __target_switch
     {
     case glsl:
@@ -1708,7 +1707,6 @@ public vec2 textureQueryLod(_Texture<
         format
     > sampler, vector<float,Shape.dimensions> p)
 {
-    __requireComputeDerivative();
     __target_switch
     {
     case glsl:
@@ -1959,17 +1957,24 @@ public vector<T.Element,4> texture(_Texture<
 [require(glsl_hlsl_spirv, texture_shadowlod)]
 public float texture(sampler1DShadow sampler, vec3 p)
 {
-    return sampler.SampleCmp(p.x, p.z);
+    __stage_switch
+    {
+    case fragment:
+        return sampler.SampleCmp(p.x, p.z);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return sampler.SampleCmp(p.x, p.z);
+        else
+            return textureLod(sampler, p, 0.0);
+    }
 }
 
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_shadowlod)]
-public float texture(sampler1DShadow sampler, vec3 p, float bias)
+public float __texture(sampler1DShadow sampler, vec3 p, float bias)
 {
     float location = p.x;
     float compareValue = p.z;
-
-    __requireComputeDerivative();
     __target_switch
     {
     case glsl: __intrinsic_asm "texture";
@@ -1986,19 +1991,39 @@ public float texture(sampler1DShadow sampler, vec3 p, float bias)
 
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_shadowlod)]
-public float texture(sampler2DShadow sampler, vec3 p)
+public float texture(sampler1DShadow sampler, vec3 p, float bias)
 {
-    return sampler.SampleCmp(p.xy, p.z);
+    __stage_switch
+    {
+    case fragment:
+        return __texture(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __texture(sampler, p, bias);
+        else
+            return textureLod(sampler, p, 0.0);
+    }
 }
 
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_shadowlod)]
-public float texture(sampler2DShadow sampler, vec3 p, float bias)
+public float texture(sampler2DShadow sampler, vec3 p)
+{
+    __stage_switch
+    {
+    case fragment:
+        return sampler.SampleCmp(p.xy, p.z);
+    default:
+        return textureLod(sampler, p, 0.0);
+    }
+}
+
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_shadowlod)]
+public float __texture(sampler2DShadow sampler, vec3 p, float bias)
 {
     vec2 location = p.xy;
     float compareValue = p.z;
-
-    __requireComputeDerivative();
     __target_switch
     {
     case glsl: __intrinsic_asm "texture";
@@ -2010,6 +2035,22 @@ public float texture(sampler2DShadow sampler, vec3 p, float bias)
     default: 
         // TODO: Need to apply bias
         return sampler.SampleCmp(location, compareValue);
+    }
+}
+
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_shadowlod)]
+public float texture(sampler2DShadow sampler, vec3 p, float bias)
+{
+    __stage_switch
+    {
+    case fragment:
+        return __texture(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __texture(sampler, p, bias);
+        else
+            return textureLod(sampler, p, 0.0);
     }
 }
 
@@ -2017,17 +2058,24 @@ public float texture(sampler2DShadow sampler, vec3 p, float bias)
 [ForceInline]
 public float texture(samplerCubeShadow sampler, vec4 p)
 {
-    return sampler.SampleCmp(p.xyz, p.w);
+    __stage_switch
+    {
+    case fragment:
+        return sampler.SampleCmp(p.xyz, p.w);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return sampler.SampleCmp(p.xyz, p.w);
+        else
+            return sampler.SampleCmpLevelZero(p.xyz, p.w);
+    }
 }
 
-[require(glsl_hlsl_spirv, texture_shadowlod)]
 [ForceInline]
-public float texture(samplerCubeShadow sampler, vec4 p, float bias)
+[require(glsl_hlsl_spirv, texture_shadowlod)]
+public float __texture(samplerCubeShadow sampler, vec4 p, float bias)
 {
     vec3 location = p.xyz;
     float compareValue = p.w;
-
-    __requireComputeDerivative();
     __target_switch
     {
     case glsl: __intrinsic_asm "texture";
@@ -2042,11 +2090,55 @@ public float texture(samplerCubeShadow sampler, vec4 p, float bias)
     }
 }
 
+[require(glsl_hlsl_spirv, texture_shadowlod)]
+[ForceInline]
+public float texture(samplerCubeShadow sampler, vec4 p, float bias)
+{
+    __stage_switch
+    {
+    case fragment:
+        return __texture(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __texture(sampler, p, bias);
+        else
+            return textureLod(sampler, p, 0.0);
+    }
+}
+
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_shadowlod)]
 public float texture(sampler1DArrayShadow sampler, vec3 p)
 {
-    return sampler.SampleCmp(p.xy, p.z);
+    __stage_switch
+    {
+    case fragment:
+        return sampler.SampleCmp(p.xy, p.z);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return sampler.SampleCmp(p.xy, p.z);
+        else
+            return textureLod(sampler, p, 0.0);
+    }
+}
+
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_shadowlod)]
+public float __texture(sampler1DArrayShadow sampler, vec3 p, float bias)
+{
+    vec2 location = p.xy;
+    float compareValue = p.z;
+    __target_switch
+    {
+    case glsl: __intrinsic_asm "texture";
+    case spirv:
+        return spirv_asm
+        {
+            result:$$float = OpImageSampleDrefImplicitLod $sampler $location $compareValue Bias $bias;
+        };
+    default: 
+        return sampler.SampleCmp(location, compareValue);
+    }
 }
 
 [ForceInline]
@@ -2055,19 +2147,15 @@ public float texture(sampler1DArrayShadow sampler, vec3 p, float bias)
 {
     vec2 location = p.xy;
     float compareValue = p.z;
-
-    __requireComputeDerivative();
-    __target_switch
+    __stage_switch
     {
-    case glsl: __intrinsic_asm "texture";
-    case spirv:
-        return spirv_asm
-        {
-            result:$$float = OpImageSampleDrefImplicitLod $sampler $location $compareValue Bias $bias;
-        };
-    default: 
-        // TODO: Need to apply bias
-        return sampler.SampleCmp(location, compareValue);
+    case fragment:
+        return __texture(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __texture(sampler, p, bias);
+        else
+            return textureLod(sampler, p, 0.0);
     }
 }
 
@@ -2075,7 +2163,16 @@ public float texture(sampler1DArrayShadow sampler, vec3 p, float bias)
 [require(glsl_hlsl_spirv, texture_shadowlod)]
 public float texture(sampler2DArrayShadow sampler, vec4 p)
 {
-    return sampler.SampleCmp(p.xyz, p.w);
+    __stage_switch
+    {
+    case fragment:
+        return sampler.SampleCmp(p.xyz, p.w);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return sampler.SampleCmp(p.xyz, p.w);
+        else
+            return textureLod(sampler, p, 0.0);
+    }
 }
 
 [ForceInline]
@@ -2092,26 +2189,41 @@ public float texture(samplerCubeArrayShadow sampler, vec4 p, float compare)
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec2 p)
+public vector<T.Element,4> __textureProj(Sampler1D<T> sampler, vec2 p)
 {
-    __requireComputeDerivative();
     __target_switch
     {
-    case glsl: __intrinsic_asm "textureProj";
-    case spirv: return spirv_asm {
-        result:$$vector<T.Element,4> = OpImageSampleProjImplicitLod $sampler $p
-    };
-    default:
-        return texture(sampler, p.x / p.y);
+        case glsl: __intrinsic_asm "textureProj";
+        case spirv: return spirv_asm {
+            result:$$vector<T.Element,4> = OpImageSampleProjImplicitLod $sampler $p
+            };
+        default:
+            return texture(sampler, p.x / p.y);
     }
 }
 
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec2 p, float bias)
+public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec2 p)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p);
+        else
+            return textureProjLod(sampler, p, 0.0);
+    }
+}
+
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> __textureProj(Sampler1D<T> sampler, vec2 p, float bias)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2126,9 +2238,25 @@ public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec2 p, float bias)
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec4 p)
+public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec2 p, float bias)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p, bias);
+        else
+            return textureProjLod(sampler, p, bias);
+    }
+}
+
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> __textureProj(Sampler1D<T> sampler, vec4 p)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2143,9 +2271,25 @@ public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec4 p)
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec4 p, float bias)
+public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec4 p)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p);
+        else
+            return textureProjLod(sampler, p, 0.0);
+    }
+}
+
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> __textureProj(Sampler1D<T> sampler, vec4 p, float bias)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2160,9 +2304,25 @@ public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec4 p, float bias)
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec3 p)
+public vector<T.Element,4> textureProj(Sampler1D<T> sampler, vec4 p, float bias)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p, bias);
+        else
+            return textureProjLod(sampler, p, bias);
+    }
+}
+
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> __textureProj(Sampler2D<T> sampler, vec3 p)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2177,9 +2337,25 @@ public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec3 p)
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec3 p, float bias)
+public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec3 p)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p);
+        else
+            return textureProjLod(sampler, p, 0.0);
+    }
+}
+
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> __textureProj(Sampler2D<T> sampler, vec3 p, float bias)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2194,9 +2370,25 @@ public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec3 p, float bias)
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec4 p)
+public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec3 p, float bias)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p, bias);
+        else
+            return textureProjLod(sampler, p, bias);
+    }
+}
+
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> __textureProj(Sampler2D<T> sampler, vec4 p)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2211,9 +2403,25 @@ public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec4 p)
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec4 p, float bias)
+public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec4 p)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p);
+        else
+            return textureProjLod(sampler, p, 0.0);
+    }
+}
+
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> __textureProj(Sampler2D<T> sampler, vec4 p, float bias)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2228,9 +2436,25 @@ public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec4 p, float bias)
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler3D<T> sampler, vec4 p)
+public vector<T.Element,4> textureProj(Sampler2D<T> sampler, vec4 p, float bias)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p, bias);
+        else
+            return textureProjLod(sampler, p, bias);
+    }
+}
+
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> __textureProj(Sampler3D<T> sampler, vec4 p)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2242,12 +2466,29 @@ public vector<T.Element,4> textureProj(Sampler3D<T> sampler, vec4 p)
     }
 }
 
+
 __generic<T:ITexelElement>
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
-public vector<T.Element,4> textureProj(Sampler3D<T> sampler, vec4 p, float bias)
+public vector<T.Element,4> textureProj(Sampler3D<T> sampler, vec4 p)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p);
+        else
+            return textureProjLod(sampler, p, 0.0);
+    }
+}
+
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> __textureProj(Sampler3D<T> sampler, vec4 p, float bias)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2259,11 +2500,27 @@ public vector<T.Element,4> textureProj(Sampler3D<T> sampler, vec4 p, float bias)
     }
 }
 
+__generic<T:ITexelElement>
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_sm_4_0_fragment)]
+public vector<T.Element,4> textureProj(Sampler3D<T> sampler, vec4 p, float bias)
+{
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p, bias);
+        else
+            return textureProjLod(sampler, p, bias);
+    }
+}
+
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_shadowlod)]
-public float textureProj(sampler1DShadow sampler, vec4 p)
+public float __textureProj(sampler1DShadow sampler, vec4 p)
 {
-    __requireComputeDerivative();
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2282,9 +2539,24 @@ public float textureProj(sampler1DShadow sampler, vec4 p)
 
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_shadowlod)]
-public float textureProj(sampler1DShadow sampler, vec4 p, float bias)
+public float textureProj(sampler1DShadow sampler, vec4 p)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p);
+        else
+            return textureProjLod(sampler, p, 0.0);
+    }
+}
+
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_shadowlod)]
+public float __textureProj(sampler1DShadow sampler, vec4 p, float bias)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2303,9 +2575,24 @@ public float textureProj(sampler1DShadow sampler, vec4 p, float bias)
 
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_shadowlod)]
-public float textureProj(sampler2DShadow sampler, vec4 p)
+public float textureProj(sampler1DShadow sampler, vec4 p, float bias)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p, bias);
+        else
+            return textureProjLod(sampler, p, bias);
+    }
+}
+
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_shadowlod)]
+public float __textureProj(sampler2DShadow sampler, vec4 p)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2324,9 +2611,24 @@ public float textureProj(sampler2DShadow sampler, vec4 p)
 
 [ForceInline]
 [require(glsl_hlsl_spirv, texture_shadowlod)]
-public float textureProj(sampler2DShadow sampler, vec4 p, float bias)
+public float textureProj(sampler2DShadow sampler, vec4 p)
 {
-    __requireComputeDerivative();
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p);
+        else
+            return textureProjLod(sampler, p, 0.0);
+    }
+}
+
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_shadowlod)]
+public float __textureProj(sampler2DShadow sampler, vec4 p, float bias)
+{
     __target_switch
     {
     case glsl: __intrinsic_asm "textureProj";
@@ -2340,6 +2642,22 @@ public float textureProj(sampler2DShadow sampler, vec4 p, float bias)
     }
     default:
         return texture(sampler, p.xyz / p.w, bias);
+    }
+}
+
+[ForceInline]
+[require(glsl_hlsl_spirv, texture_shadowlod)]
+public float textureProj(sampler2DShadow sampler, vec4 p, float bias)
+{
+    __stage_switch
+    {
+    case fragment:
+        return __textureProj(sampler, p, bias);
+    default:
+        if (__isComputeDerivativeEnabled())
+            return __textureProj(sampler, p, bias);
+        else
+            return textureProjLod(sampler, p, 0.0);
     }
 }
 

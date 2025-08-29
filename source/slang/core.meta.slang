@@ -3540,6 +3540,9 @@ void __requireMaximallyReconverges();
 __intrinsic_op($(kIROp_RequireQuadDerivatives))
 void __requireQuadDerivatives();
 
+__intrinsic_op($(kIROp_IsComputeDerivativeEnabled))
+bool __isComputeDerivativeEnabled();
+
 //@ public:
 /// @category misc_types 
 enum MemoryOrder
